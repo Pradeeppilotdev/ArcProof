@@ -176,9 +176,3 @@ AGENT_ADDRESS=0xYourAddress \
 
 ---
 
-## Built by
-
-**Chandrapradeep R** ([@pradeeppilot2k5](https://x.com/pradeeppilot2k5))  
-Final year CSE @ KSRCE · GDG on Campus organizer  
-Previously: ProofAlpha (0G APAC Hackathon) · GhostNet (Nansen CLI Challenge 2nd place) · OnChain Roamers  
-GitHub: [Pradeeppilotdev](https://github.com/Pradeeppilotdev)
