@@ -1,0 +1,28 @@
+node_modules/
+frontend/node_modules/
+
+artifacts/
+cache/
+typechain-types/
+
+.env
+
+# Circuit build outputs
+circuits/task_completion_js/
+circuits/task_complication_js/
+circuits/*.r1cs
+circuits/*.sym
+circuits/*.zkey
+circuits/*.ptau
+ptau/
+
+# Proof outputs
+proof_*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
