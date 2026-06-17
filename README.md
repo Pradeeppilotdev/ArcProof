@@ -175,4 +175,3 @@ AGENT_ADDRESS=0xYourAddress \
 - [ ] Farcaster Frame for task posting + proof status
 
 ---
-

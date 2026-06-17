@@ -1,1 +1,10 @@
-{}
+{
+  "network": "arc-testnet",
+  "chainId": 5042002,
+  "usdc": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  "workRegistry": "0x3392D39D636bCC1103d07BbA0D6995E185b81A82",
+  "proofVerifier": "0xbd105eC4De1bAEf94fe9587eA26D9E74c73BC861",
+  "settlementGate": "0xd3c562d4919a971981AA7d84476d86691Cc7c9e9",
+  "deployedAt": "2026-06-17T18:17:34.665Z",
+  "deployer": "0x68a691c461c54CE767C6d539022fa344397b9f31"
+}

@@ -5,11 +5,12 @@
 const { ethers } = require("ethers");
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
 
 // ─── Arc Testnet Config ───────────────────────────────────────────────────────
 // https://docs.arc.io/arc/references/connect-to-arc
-const ARC_TESTNET_RPC = "https://rpc.arc.io/testnet"; // update from docs
-const ARC_CHAIN_ID = 1337; // update from docs
+const ARC_TESTNET_RPC = process.env.ARC_TESTNET_RPC || "https://rpc.arc.io/testnet";
+const ARC_CHAIN_ID = parseInt(process.env.ARC_CHAIN_ID || "5042002");
 
 // Arc testnet USDC address — update from:
 // https://docs.arc.io/arc/references/contract-addresses
