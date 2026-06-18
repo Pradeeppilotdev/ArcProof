@@ -14,7 +14,7 @@ const ARC_CHAIN_ID = parseInt(process.env.ARC_CHAIN_ID || "5042002");
 
 // Arc testnet USDC address — update from:
 // https://docs.arc.io/arc/references/contract-addresses
-const USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
 
 // ─── ABIs (compiled from contracts) ──────────────────────────────────────────
 // Run: npx hardhat compile  →  artifacts/contracts/...

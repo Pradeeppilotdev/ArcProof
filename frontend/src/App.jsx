@@ -1,349 +1,195 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import contracts from "./contracts.json";
+import { Button } from "./components/ui/button";
+import { Card, CardContent } from "./components/ui/card";
+import { Badge } from "./components/ui/badge";
+import { Input } from "./components/ui/input";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "./components/ui/dialog";
 
-// ─── Mock data & constants ────────────────────────────────────────────────────
-
-const ARC_BLUE = "#5B8DEF";
-const PROOF_GREEN = "#00E5A0";
-const SLASH_RED = "#FF4D6D";
-const MUTED = "#8892AA";
+const STATUS = { 0: "Open", 1: "Proving", 2: "Settled", 3: "Slashed" };
 
 const MOCK_TASKS = [
-  {
-    id: "0",
-    client: "0x3fA8...c291",
-    agent: "0x7b2E...4f01",
-    reward: "12.50",
-    outputHash: "0xab3f...9e12",
-    deadline: Date.now() + 1000 * 60 * 47,
-    status: "Proving",
-  },
-  {
-    id: "1",
-    client: "0x9cD1...881a",
-    agent: null,
-    reward: "5.00",
-    outputHash: "0x54cc...7d3b",
-    deadline: Date.now() + 1000 * 60 * 120,
-    status: "Open",
-  },
-  {
-    id: "2",
-    client: "0x1aE4...ff02",
-    agent: "0xDead...Beef",
-    reward: "30.00",
-    outputHash: "0x9911...a0c3",
-    deadline: Date.now() - 1000,
-    status: "Settled",
-  },
+  { id: "0", client: "0x3fA8...c291", agent: "0x7b2E...4f01", reward: "12.50", outputHash: "0xab3f...9e12", deadline: Date.now() + 2820000, status: "Proving" },
+  { id: "1", client: "0x9cD1...881a", agent: null, reward: "5.00", outputHash: "0x54cc...7d3b", deadline: Date.now() + 7200000, status: "Open" },
+  { id: "2", client: "0x1aE4...ff02", agent: "0xDead...Beef", reward: "30.00", outputHash: "0x9911...a0c3", deadline: Date.now() - 1000, status: "Settled" },
 ];
 
-const STATUS_COLOR = {
-  Open: ARC_BLUE,
-  Proving: "#F5A623",
-  Settled: PROOF_GREEN,
-  Slashed: SLASH_RED,
-};
+const NAV = [
+  { label: "Dashboard", icon: "◇", active: true },
+  { label: "Tasks", icon: "○" },
+  { label: "Agents", icon: "□" },
+  { label: "Contracts", icon: "△" },
+  { label: "Settings", icon: "⚬" },
+];
 
-function useCountdown(deadline) {
-  const [remaining, setRemaining] = useState(Math.max(0, deadline - Date.now()));
+function Countdown({ deadline }) {
+  const [rem, setRem] = useState(Math.max(0, deadline - Date.now()));
   useEffect(() => {
-    const iv = setInterval(() => setRemaining(Math.max(0, deadline - Date.now())), 1000);
+    const iv = setInterval(() => setRem(Math.max(0, deadline - Date.now())), 1000);
     return () => clearInterval(iv);
   }, [deadline]);
-  const m = Math.floor(remaining / 60000);
-  const s = Math.floor((remaining % 60000) / 1000);
-  return remaining > 0 ? `${m}m ${s.toString().padStart(2, "0")}s` : "Expired";
+  const m = Math.floor(rem / 60000);
+  const s = Math.floor((rem % 60000) / 1000);
+  return rem > 0 ? `${m}m ${s}s` : "Expired";
 }
 
-// ─── Pipeline Stage Component ─────────────────────────────────────────────────
+const statusBadge = (s) => {
+  const map = {
+    Open: "border-zinc-700 text-zinc-400",
+    Proving: "border-yellow-700 text-yellow-500",
+    Settled: "border-emerald-700 text-emerald-500",
+    Slashed: "border-red-700 text-red-500",
+  };
+  return map[s] || "";
+};
 
-function PipelineStage({ label, sublabel, active, done, isLast }) {
+function PipelineBar({ stage }) {
+  const steps = [
+    { label: "Escrow", sub: "USDC locked" },
+    { label: "Proving", sub: "ZK witness" },
+    { label: "Verifying", sub: "On-chain" },
+    { label: "Settled", sub: "USDC released" },
+  ];
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            border: `2px solid ${done ? PROOF_GREEN : active ? ARC_BLUE : "#1E2D42"}`,
-            background: done ? PROOF_GREEN + "22" : active ? ARC_BLUE + "22" : "#0A1628",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "all 0.5s ease",
-            boxShadow: active ? `0 0 20px ${ARC_BLUE}55` : done ? `0 0 20px ${PROOF_GREEN}44` : "none",
-          }}
-        >
-          {done ? (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M4 10l4 4 8-8" stroke={PROOF_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          ) : (
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: active ? ARC_BLUE : "#1E2D42",
-                transition: "background 0.5s",
-                animation: active ? "pulse 1.5s infinite" : "none",
-              }}
-            />
+    <div className="flex items-center justify-center py-4">
+      {steps.map((s, i) => (
+        <div key={s.label} className="flex items-center">
+          <div className="flex flex-col items-center gap-2">
+            <div className={`w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-mono transition-all duration-500 ${
+              stage > i ? "border-emerald-500 bg-emerald-500/10 text-emerald-500" :
+              stage === i ? "border-zinc-100 bg-zinc-100/10 text-zinc-100 shadow-[0_0_12px_rgba(250,250,250,0.12)]" :
+              "border-zinc-700 text-zinc-600"
+            }`}>
+              {stage > i ? "✓" : stage === i ? <span className="w-2 h-2 rounded-full bg-zinc-100 animate-pulse" /> : i + 1}
+            </div>
+            <div className="text-center">
+              <div className={`text-[10px] font-semibold tracking-wider ${
+                stage > i ? "text-emerald-500" : stage === i ? "text-zinc-100" : "text-zinc-600"
+              }`}>{s.label}</div>
+              <div className="text-[9px] text-zinc-600 font-mono">{s.sub}</div>
+            </div>
+          </div>
+          {i < steps.length - 1 && (
+            <div className={`w-12 h-[2px] mx-2 mb-6 rounded transition-all duration-500 ${
+              stage > i ? "bg-emerald-500" : "bg-zinc-800"
+            }`} />
           )}
         </div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: done ? PROOF_GREEN : active ? "#E8EDF5" : MUTED, fontFamily: "'Space Grotesk', sans-serif", transition: "color 0.5s" }}>{label}</div>
-          <div style={{ fontSize: 10, color: MUTED, fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>{sublabel}</div>
-        </div>
-      </div>
-      {!isLast && (
-        <div
-          style={{
-            width: 80,
-            height: 2,
-            margin: "0 8px",
-            marginBottom: 28,
-            background: done ? `linear-gradient(90deg, ${PROOF_GREEN}, ${PROOF_GREEN})` : `linear-gradient(90deg, #1E2D42, #1E2D42)`,
-            borderRadius: 2,
-            transition: "background 0.8s ease",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          {active && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: `linear-gradient(90deg, transparent, ${ARC_BLUE}, transparent)`,
-                animation: "flow 1.2s linear infinite",
-              }}
-            />
-          )}
-        </div>
-      )}
+      ))}
     </div>
   );
 }
-
-// ─── Task Card ────────────────────────────────────────────────────────────────
 
 function TaskCard({ task, onProve, onClaim }) {
-  const countdown = useCountdown(task.deadline);
-  const expired = task.deadline < Date.now();
-
   return (
-    <div
-      style={{
-        background: "#0A1628",
-        border: `1px solid #1E2D42`,
-        borderRadius: 12,
-        padding: "20px 24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 14,
-        transition: "border-color 0.2s",
-        cursor: "default",
-      }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = "#2A3D55")}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = "#1E2D42")}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: MUTED }}>Task #{task.id}</span>
-          <span
-            style={{
-              background: STATUS_COLOR[task.status] + "22",
-              color: STATUS_COLOR[task.status],
-              border: `1px solid ${STATUS_COLOR[task.status]}44`,
-              borderRadius: 6,
-              padding: "2px 8px",
-              fontSize: 10,
-              fontWeight: 600,
-              fontFamily: "'Space Grotesk', sans-serif",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-            }}
-          >
-            {task.status}
-          </span>
-        </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#E8EDF5", fontFamily: "'Space Grotesk', sans-serif" }}>
-            {task.reward} <span style={{ fontSize: 12, color: MUTED, fontWeight: 400 }}>USDC</span>
+    <div className="border border-zinc-800 rounded-lg hover:border-zinc-700 transition-colors">
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono text-zinc-500">#{task.id}</span>
+            <Badge variant="outline" className={`text-[10px] px-2 py-0 ${statusBadge(task.status)}`}>
+              {task.status}
+            </Badge>
+          </div>
+          <div className="text-right">
+            <span className="text-base font-semibold text-zinc-100">{task.reward}</span>
+            <span className="text-[11px] text-zinc-500 ml-1">USDC</span>
           </div>
         </div>
+        <div className="grid grid-cols-4 gap-4 text-xs">
+          <div>
+            <div className="text-zinc-600 font-medium mb-1 text-[10px] uppercase tracking-wider">Client</div>
+            <div className="font-mono text-zinc-300">{task.client}</div>
+          </div>
+          <div>
+            <div className="text-zinc-600 font-medium mb-1 text-[10px] uppercase tracking-wider">Agent</div>
+            <div className="font-mono text-zinc-300">{task.agent || <span className="text-zinc-600">Unclaimed</span>}</div>
+          </div>
+          <div>
+            <div className="text-zinc-600 font-medium mb-1 text-[10px] uppercase tracking-wider">Output Hash</div>
+            <div className="font-mono text-zinc-400 truncate">{task.outputHash}</div>
+          </div>
+          <div>
+            <div className="text-zinc-600 font-medium mb-1 text-[10px] uppercase tracking-wider">Deadline</div>
+            <div className="font-mono text-zinc-300"><Countdown deadline={task.deadline} /></div>
+          </div>
+        </div>
+        <div className="mt-3">
+          {task.status === "Open" && (
+            <Button variant="outline" size="sm" onClick={() => onClaim(task.id)}>Claim Task</Button>
+          )}
+          {task.status === "Proving" && (
+            <Button variant="outline" size="sm" className="text-emerald-500 border-emerald-800 hover:bg-emerald-950" onClick={() => onProve(task)}>
+              Submit Proof →
+            </Button>
+          )}
+          {task.status === "Settled" && (
+            <div className="flex items-center gap-2 text-emerald-500 text-[11px]">
+              <span>●</span>
+              <span>USDC settled on-chain</span>
+            </div>
+          )}
+        </div>
       </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <div>
-          <div style={{ fontSize: 10, color: MUTED, fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Client</div>
-          <div style={{ fontSize: 12, color: "#C8D4E8", fontFamily: "'JetBrains Mono', monospace" }}>{task.client}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 10, color: MUTED, fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Agent</div>
-          <div style={{ fontSize: 12, color: task.agent ? "#C8D4E8" : MUTED, fontFamily: "'JetBrains Mono', monospace" }}>{task.agent || "Unclaimed"}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 10, color: MUTED, fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Output Hash</div>
-          <div style={{ fontSize: 12, color: "#C8D4E8", fontFamily: "'JetBrains Mono', monospace" }}>{task.outputHash}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 10, color: MUTED, fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Deadline</div>
-          <div style={{ fontSize: 12, color: expired ? SLASH_RED : "#C8D4E8", fontFamily: "'JetBrains Mono', monospace" }}>{countdown}</div>
-        </div>
-      </div>
-
-      {task.status === "Open" && (
-        <button onClick={() => onClaim(task.id)} style={{ ...btnStyle(ARC_BLUE), alignSelf: "flex-start" }}>
-          Claim Task
-        </button>
-      )}
-      {task.status === "Proving" && (
-        <button onClick={() => onProve(task)} style={{ ...btnStyle(PROOF_GREEN), alignSelf: "flex-start" }}>
-          Submit Proof →
-        </button>
-      )}
-      {task.status === "Settled" && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 7l3.5 3.5L12 3" stroke={PROOF_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span style={{ fontSize: 12, color: PROOF_GREEN, fontFamily: "'Space Grotesk', sans-serif" }}>USDC settled on-chain</span>
-        </div>
-      )}
     </div>
   );
 }
-
-function btnStyle(color) {
-  return {
-    background: color + "18",
-    border: `1px solid ${color}55`,
-    color: color,
-    borderRadius: 8,
-    padding: "8px 16px",
-    fontSize: 12,
-    fontWeight: 600,
-    fontFamily: "'Space Grotesk', sans-serif",
-    cursor: "pointer",
-    transition: "all 0.15s",
-    letterSpacing: "0.04em",
-  };
-}
-
-// ─── Proof Modal ──────────────────────────────────────────────────────────────
 
 function ProofModal({ task, onClose }) {
-  const [stage, setStage] = useState(0); // 0=idle 1=generating 2=verifying 3=settling 4=done
+  const [stage, setStage] = useState(0);
   const [log, setLog] = useState([]);
-
-  const stages = [
-    { label: "ESCROW", sublabel: "USDC locked", active: stage === 0, done: stage > 0 },
-    { label: "PROVING", sublabel: "ZK witness", active: stage === 1 || stage === 2, done: stage > 2 },
-    { label: "VERIFYING", sublabel: "On-chain check", active: stage === 3, done: stage > 3 },
-    { label: "SETTLED", sublabel: "USDC released", active: false, done: stage === 4 },
-  ];
-
-  function addLog(msg) {
-    setLog(l => [...l, { time: new Date().toLocaleTimeString("en", { hour12: false }), msg }]);
-  }
+  const addLog = (msg) => setLog((l) => [...l, { time: new Date().toLocaleTimeString("en", { hour12: false }), msg }]);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   async function runProof() {
-    setStage(1);
-    addLog("Building witness from raw output + salt...");
-    await sleep(900);
-    addLog("Computing Poseidon hash of output...");
-    await sleep(700);
-    addLog(`Hash computed: ${task.outputHash}`);
-    await sleep(500);
-    setStage(2);
-    addLog("Generating Groth16 proof (snarkjs)...");
-    await sleep(1200);
-    addLog("Proof generated: π.A, π.B, π.C ready");
-    await sleep(400);
-    setStage(3);
-    addLog(`Sending tx to SettlementGate.submitProof(${task.id})...`);
-    await sleep(800);
-    addLog("ProofVerifier.verify() → public inputs matched");
-    await sleep(600);
-    addLog("Groth16 pairing check → VALID ✓");
-    await sleep(500);
-    addLog(`WorkRegistry.settleTask(${task.id}) → USDC releasing...`);
-    await sleep(700);
-    addLog(`${task.reward} USDC transferred to ${task.agent}`);
-    await sleep(300);
-    setStage(4);
-    addLog("Settlement complete. Tx confirmed on Arc testnet.");
+    setStage(1); addLog("Building witness from raw output + salt..."); await sleep(800);
+    addLog("Computing Poseidon hash..."); await sleep(600);
+    setStage(2); addLog("Generating Groth16 proof (snarkjs)..."); await sleep(1000);
+    addLog("Proof generated."); await sleep(400);
+    setStage(3); addLog("Sending tx to SettlementGate..."); await sleep(700);
+    addLog("Groth16 pairing check → VALID"); await sleep(500);
+    addLog("WorkRegistry.settleTask → USDC releasing..."); await sleep(600);
+    addLog(`${task.reward} USDC transferred to agent`); await sleep(300);
+    setStage(4); addLog("Settlement complete. Tx confirmed.");
   }
 
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
-
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#080E1Acc", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
-      <div style={{ background: "#0D1929", border: "1px solid #1E2D42", borderRadius: 16, width: "100%", maxWidth: 540, padding: 32, display: "flex", flexDirection: "column", gap: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#E8EDF5", fontFamily: "'Space Grotesk', sans-serif" }}>Submit Proof</div>
-            <div style={{ fontSize: 12, color: MUTED, fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>Task #{task.id} · {task.reward} USDC</div>
-          </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", fontSize: 20, lineHeight: 1 }}>×</button>
-        </div>
-
-        {/* Pipeline */}
-        <div style={{ display: "flex", justifyContent: "center", padding: "8px 0" }}>
-          {stages.map((s, i) => (
-            <PipelineStage key={s.label} {...s} isLast={i === stages.length - 1} />
-          ))}
-        </div>
-
-        {/* Log */}
-        <div
-          style={{
-            background: "#080E1A",
-            border: "1px solid #1E2D42",
-            borderRadius: 8,
-            padding: "12px 16px",
-            minHeight: 120,
-            maxHeight: 160,
-            overflowY: "auto",
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 11,
-            color: "#8892AA",
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
-          }}
-        >
-          {log.length === 0 && <span style={{ color: "#4A5568" }}>Waiting for proof submission...</span>}
+    <Dialog open={true} onClose={onClose}>
+      <DialogHeader>
+        <DialogTitle>Submit Proof</DialogTitle>
+        <DialogDescription>Task #{task.id} · {task.reward} USDC</DialogDescription>
+      </DialogHeader>
+      <DialogContent>
+        <PipelineBar stage={stage} />
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-3 font-mono text-[11px] min-h-[100px] max-h-[140px] overflow-y-auto space-y-1.5">
+          {log.length === 0 && <span className="text-zinc-700">Waiting for proof submission...</span>}
           {log.map((l, i) => (
-            <div key={i} style={{ display: "flex", gap: 10 }}>
-              <span style={{ color: "#4A5568", flexShrink: 0 }}>{l.time}</span>
-              <span style={{ color: i === log.length - 1 ? PROOF_GREEN : "#8892AA" }}>{l.msg}</span>
+            <div key={i} className="flex gap-2">
+              <span className="text-zinc-700 shrink-0">{l.time}</span>
+              <span className={i === log.length - 1 ? "text-emerald-400" : "text-zinc-400"}>{l.msg}</span>
             </div>
           ))}
         </div>
-
         {stage === 0 && (
-          <button onClick={runProof} style={{ ...btnStyle(PROOF_GREEN), padding: "12px 24px", fontSize: 13, alignSelf: "center" }}>
-            Generate & Submit Proof
-          </button>
+          <div className="flex justify-center pt-2">
+            <Button variant="outline" className="text-emerald-500 border-emerald-800 hover:bg-emerald-950" onClick={runProof}>
+              Generate & Submit Proof
+            </Button>
+          </div>
         )}
         {stage === 4 && (
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 28 }}>✓</div>
-            <div style={{ fontSize: 14, color: PROOF_GREEN, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, marginTop: 4 }}>
-              {task.reward} USDC settled — no human approval needed
-            </div>
+          <div className="text-center pt-2">
+            <div className="text-2xl mb-1">✓</div>
+            <div className="text-sm text-emerald-500 font-medium">{task.reward} USDC settled</div>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+      <DialogFooter>
+        <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
+      </DialogFooter>
+    </Dialog>
   );
 }
-
-// ─── Post Task Modal ──────────────────────────────────────────────────────────
 
 function PostTaskModal({ onClose, onPost }) {
   const [reward, setReward] = useState("10");
@@ -352,196 +198,214 @@ function PostTaskModal({ onClose, onPost }) {
 
   function handle() {
     if (!output || !reward) return;
-    onPost({ reward, outputHash: "0x" + Math.random().toString(16).slice(2, 10) + "..." + Math.random().toString(16).slice(2, 6), deadline: Date.now() + parseInt(hours) * 3600000 });
+    onPost({
+      reward,
+      outputHash: "0x" + Math.random().toString(16).slice(2, 10) + "..." + Math.random().toString(16).slice(2, 6),
+      deadline: Date.now() + parseInt(hours) * 3600000,
+    });
     onClose();
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#080E1Acc", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24 }}>
-      <div style={{ background: "#0D1929", border: "1px solid #1E2D42", borderRadius: 16, width: "100%", maxWidth: 440, padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#E8EDF5", fontFamily: "'Space Grotesk', sans-serif" }}>Post a Task</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: MUTED, cursor: "pointer", fontSize: 20 }}>×</button>
-        </div>
-
+    <Dialog open={true} onClose={onClose}>
+      <DialogHeader>
+        <DialogTitle>Post a Task</DialogTitle>
+        <DialogDescription>Lock USDC in escrow with an output spec</DialogDescription>
+      </DialogHeader>
+      <DialogContent className="space-y-4">
         {[
           { label: "USDC Reward", val: reward, set: setReward, placeholder: "10.00", hint: "Amount locked in escrow" },
-          { label: "Expected Output (any text)", val: output, set: setOutput, placeholder: "e.g. Summarize this document...", hint: "Will be hashed as outputHash" },
+          { label: "Expected Output", val: output, set: setOutput, placeholder: "e.g. Summarize this document...", hint: "Will be hashed as outputHash" },
           { label: "Deadline (hours)", val: hours, set: setHours, placeholder: "2", hint: "Agent must prove before this" },
-        ].map(f => (
-          <div key={f.label}>
-            <label style={{ fontSize: 10, color: MUTED, fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: 6 }}>{f.label}</label>
-            <input
-              value={f.val}
-              onChange={e => f.set(e.target.value)}
-              placeholder={f.placeholder}
-              style={{ width: "100%", background: "#080E1A", border: "1px solid #1E2D42", borderRadius: 8, padding: "10px 12px", color: "#E8EDF5", fontFamily: "'JetBrains Mono', monospace", fontSize: 13, outline: "none", boxSizing: "border-box" }}
-            />
-            <div style={{ fontSize: 10, color: "#4A5568", marginTop: 4, fontFamily: "'Space Grotesk', sans-serif" }}>{f.hint}</div>
+        ].map((f) => (
+          <div key={f.label} className="space-y-1.5">
+            <label className="text-[10px] uppercase tracking-wider text-zinc-600 font-medium">{f.label}</label>
+            <Input value={f.val} onChange={(e) => f.set(e.target.value)} placeholder={f.placeholder} />
+            <div className="text-[10px] text-zinc-700">{f.hint}</div>
           </div>
         ))}
-
-        <button onClick={handle} style={{ ...btnStyle(ARC_BLUE), padding: "12px", fontSize: 13, textAlign: "center" }}>
-          Lock USDC & Post Task
-        </button>
-      </div>
-    </div>
+      </DialogContent>
+      <DialogFooter>
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button variant="default" size="sm" onClick={handle}>Lock USDC & Post</Button>
+      </DialogFooter>
+    </Dialog>
   );
 }
-
-// ─── Stats Bar ────────────────────────────────────────────────────────────────
-
-function StatCard({ label, value, color }) {
-  return (
-    <div style={{ background: "#0A1628", border: "1px solid #1E2D42", borderRadius: 10, padding: "16px 20px", flex: 1 }}>
-      <div style={{ fontSize: 10, color: MUTED, fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: color || "#E8EDF5", fontFamily: "'Space Grotesk', sans-serif" }}>{value}</div>
-    </div>
-  );
-}
-
-// ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function ArcProof() {
   const [tasks, setTasks] = useState(MOCK_TASKS);
   const [provingTask, setProvingTask] = useState(null);
   const [showPost, setShowPost] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
+  const [connected, setConnected] = useState(false);
 
   function handleClaim(id) {
-    setTasks(ts => ts.map(t => t.id === id ? { ...t, status: "Proving", agent: "0xYou...r4dd" } : t));
+    setTasks((ts) => ts.map((t) => t.id === id ? { ...t, status: "Proving", agent: "0xYou...r4dd" } : t));
   }
 
   function handlePost(data) {
     const id = String(tasks.length);
-    setTasks(ts => [...ts, { id, client: "0xYou...r4dd", agent: null, reward: data.reward, outputHash: data.outputHash, deadline: data.deadline, status: "Open" }]);
+    setTasks((ts) => [...ts, { id, client: "0xYou...r4dd", agent: null, reward: data.reward, outputHash: data.outputHash, deadline: data.deadline, status: "Open" }]);
   }
 
-  const settled = tasks.filter(t => t.status === "Settled").length;
-  const totalEscrowed = tasks.filter(t => ["Open", "Proving"].includes(t.status)).reduce((a, t) => a + parseFloat(t.reward), 0);
-  const proofs = tasks.filter(t => t.status === "Settled").reduce((a, t) => a + parseFloat(t.reward), 0);
+  const settled = tasks.filter((t) => t.status === "Settled").length;
+  const totalEscrowed = tasks.filter((t) => ["Open", "Proving"].includes(t.status)).reduce((a, t) => a + parseFloat(t.reward), 0);
+  const settledUsdc = tasks.filter((t) => t.status === "Settled").reduce((a, t) => a + parseFloat(t.reward), 0);
 
   return (
-    <>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #080E1A; }
-        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.85); } }
-        @keyframes flow { 0% { transform:translateX(-100%); } 100% { transform:translateX(200%); } }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #0A1628; } ::-webkit-scrollbar-thumb { background: #1E2D42; border-radius: 2px; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #09090b; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #141416; } ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
       `}</style>
 
-      <div style={{ minHeight: "100vh", background: "#080E1A", color: "#E8EDF5", fontFamily: "'Inter', sans-serif" }}>
+      {/* ─── Layout: sidebar + main ─── */}
+      <div className="flex min-h-screen">
 
-        {/* Header */}
-        <div style={{ borderBottom: "1px solid #1E2D42", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${ARC_BLUE}, ${PROOF_GREEN})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 2L2 5v6l6 3 6-3V5L8 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
-                <path d="M8 8l-6-3M8 8l6-3M8 8v6" stroke="white" strokeWidth="1.2" />
+        {/* Sidebar */}
+        <aside className="w-56 border-r border-zinc-800 flex flex-col shrink-0">
+          <div className="h-14 flex items-center gap-2.5 px-5 border-b border-zinc-800">
+            <div className="w-6 h-6 rounded bg-zinc-100 flex items-center justify-center">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2L2 5v6l6 3 6-3V5L8 2z" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M8 8l-6-3M8 8l6-3M8 8v6" stroke="black" strokeWidth="1.2" />
               </svg>
             </div>
-            <div>
-              <span style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", color: "#E8EDF5" }}>ArcProof</span>
-              <span style={{ fontSize: 10, color: MUTED, fontFamily: "'JetBrains Mono', monospace", marginLeft: 8 }}>Arc Testnet</span>
-            </div>
+            <span className="text-sm font-semibold">ArcProof</span>
           </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <div style={{ fontSize: 11, color: PROOF_GREEN, fontFamily: "'JetBrains Mono', monospace", background: PROOF_GREEN + "15", border: `1px solid ${PROOF_GREEN}33`, borderRadius: 6, padding: "4px 10px" }}>
-              ● Live
-            </div>
-            <button
-              onClick={() => setWalletConnected(w => !w)}
-              style={{ ...btnStyle(walletConnected ? PROOF_GREEN : ARC_BLUE), padding: "7px 14px" }}
-            >
-              {walletConnected ? "0xYou...r4dd" : "Connect Wallet"}
-            </button>
-          </div>
-        </div>
-
-        <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", gap: 28 }}>
-
-          {/* Hero */}
-          <div style={{ textAlign: "center", padding: "16px 0 8px" }}>
-            <div style={{ fontSize: 11, color: ARC_BLUE, fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>
-              ZK-Verified Settlement on Arc
-            </div>
-            <h1 style={{ fontSize: 36, fontWeight: 300, color: "#E8EDF5", fontFamily: "'Space Grotesk', sans-serif", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
-              USDC only settles when<br />
-              <span style={{ fontWeight: 700, background: `linear-gradient(90deg, ${ARC_BLUE}, ${PROOF_GREEN})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                work is proven
-              </span>
-            </h1>
-            <p style={{ marginTop: 12, fontSize: 14, color: MUTED, maxWidth: 480, margin: "12px auto 0", lineHeight: 1.6 }}>
-              No human approval. No time-locks. Cryptographic proof gates every payment.
-            </p>
-          </div>
-
-          {/* Stats */}
-          <div style={{ display: "flex", gap: 12 }}>
-            <StatCard label="Escrowed" value={`$${totalEscrowed.toFixed(2)}`} color={ARC_BLUE} />
-            <StatCard label="Proofs Verified" value={settled} color={PROOF_GREEN} />
-            <StatCard label="USDC Settled" value={`$${proofs.toFixed(2)}`} color={PROOF_GREEN} />
-            <StatCard label="Network" value="Arc Testnet" />
-          </div>
-
-          {/* Tasks */}
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#E8EDF5", fontFamily: "'Space Grotesk', sans-serif" }}>
-                Task Registry
-              </span>
-              <button onClick={() => setShowPost(true)} style={{ ...btnStyle(ARC_BLUE), padding: "8px 14px" }}>
-                + Post Task
+          <nav className="flex-1 p-3 space-y-1">
+            {NAV.map((item) => (
+              <button
+                key={item.label}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                  item.active ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
+                }`}
+              >
+                <span className="w-4 text-center text-xs opacity-60">{item.icon}</span>
+                {item.label}
               </button>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {tasks.map(t => (
-                <TaskCard key={t.id} task={t} onProve={setProvingTask} onClaim={handleClaim} />
-              ))}
-            </div>
-          </div>
-
-          {/* How it works */}
-          <div style={{ background: "#0A1628", border: "1px solid #1E2D42", borderRadius: 12, padding: "24px 28px" }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: MUTED, fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 16 }}>
-              How settlement works
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
-              {[
-                { step: "01", title: "Client posts task", body: "USDC locked in WorkRegistry.sol with an outputHash and deadline." },
-                { step: "02", title: "Agent proves work", body: "Groth16 ZK proof shows knowledge of the pre-image. Circuit runs off-chain." },
-                { step: "03", title: "USDC settles", body: "SettlementGate verifies proof on-chain. USDC transfers atomically. No trust needed." },
-              ].map(s => (
-                <div key={s.step}>
-                  <div style={{ fontSize: 11, color: ARC_BLUE, fontFamily: "'JetBrains Mono', monospace", marginBottom: 8 }}>{s.step}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#E8EDF5", fontFamily: "'Space Grotesk', sans-serif", marginBottom: 6 }}>{s.title}</div>
-                  <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.6 }}>{s.body}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Contract addresses */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-            {[
-              { name: "WorkRegistry", addr: "0xTBD...deploy" },
-              { name: "ProofVerifier", addr: "0xTBD...deploy" },
-              { name: "SettlementGate", addr: "0xTBD...deploy" },
-            ].map(c => (
-              <div key={c.name} style={{ background: "#0A1628", border: "1px solid #1E2D42", borderRadius: 8, padding: "12px 16px" }}>
-                <div style={{ fontSize: 10, color: MUTED, fontFamily: "'Space Grotesk', sans-serif", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>{c.name}</div>
-                <div style={{ fontSize: 11, color: ARC_BLUE, fontFamily: "'JetBrains Mono', monospace" }}>{c.addr}</div>
-              </div>
             ))}
+          </nav>
+          <div className="p-3 border-t border-zinc-800">
+            <div className="flex items-center gap-2 px-3 py-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs text-zinc-500">Arc Testnet</span>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main content */}
+        <div className="flex-1 flex flex-col">
+          {/* Top bar */}
+          <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-6 shrink-0">
+            <div className="flex items-center gap-3 text-sm">
+              <span className="text-zinc-400">Dashboard</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-xs text-zinc-600 font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Chain {contracts.chainId}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setConnected((w) => !w)}>
+                {connected ? "0xYou...r4dd" : "Connect Wallet"}
+              </Button>
+            </div>
+          </header>
+
+          {/* Page content */}
+          <div className="flex-1 overflow-auto p-6">
+            <div className="max-w-5xl mx-auto space-y-8">
+
+              {/* Hero */}
+              <div className="space-y-1">
+                <h1 className="text-2xl font-semibold tracking-tight">ZK-Verified Settlement</h1>
+                <p className="text-sm text-zinc-500">Proof-gated USDC payments on Arc — no trust required.</p>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-4 gap-4">
+                {[
+                  { label: "Total Escrowed", value: `$${totalEscrowed.toFixed(2)}`, change: "+2.5%" },
+                  { label: "Active Tasks", value: tasks.filter((t) => t.status !== "Settled" && t.status !== "Slashed").length, change: "+1" },
+                  { label: "Proofs Verified", value: settled, change: "100%" },
+                  { label: "USDC Settled", value: `$${settledUsdc.toFixed(2)}`, change: "All time" },
+                ].map((s) => (
+                  <Card key={s.label}>
+                    <CardContent className="p-4">
+                      <div className="text-[10px] uppercase tracking-widest text-zinc-600 font-medium mb-2">{s.label}</div>
+                      <div className="text-2xl font-semibold">{s.value}</div>
+                      <div className="text-[10px] text-zinc-700 mt-1">{s.change}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Task Registry */}
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-sm font-semibold">Task Registry</h2>
+                    <p className="text-xs text-zinc-600 mt-0.5">{tasks.length} tasks · {settled} settled</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setShowPost(true)}>
+                    + Post Task
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {tasks.map((t) => (
+                    <TaskCard key={t.id} task={t} onProve={setProvingTask} onClaim={handleClaim} />
+                  ))}
+                </div>
+              </section>
+
+              {/* How It Works + Contracts row */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card className="col-span-2">
+                  <CardContent className="p-5">
+                    <div className="text-[10px] uppercase tracking-widest text-zinc-600 font-medium mb-4">How Settlement Works</div>
+                    <div className="grid grid-cols-3 gap-5">
+                      {[
+                        { step: "01", title: "Client posts task", body: "USDC locked in escrow with output hash and deadline." },
+                        { step: "02", title: "Agent proves work", body: "Groth16 ZK proof shows knowledge of the pre-image." },
+                        { step: "03", title: "USDC settles", body: "On-chain verification releases funds atomically." },
+                      ].map((s) => (
+                        <div key={s.step}>
+                          <div className="text-[10px] font-mono text-zinc-600 mb-2">{s.step}</div>
+                          <div className="text-xs font-semibold mb-1">{s.title}</div>
+                          <div className="text-[11px] text-zinc-500 leading-relaxed">{s.body}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-5">
+                    <div className="text-[10px] uppercase tracking-widest text-zinc-600 font-medium mb-3">Contracts</div>
+                    <div className="space-y-3">
+                      {[
+                        { name: "WorkRegistry", addr: contracts.workRegistry },
+                        { name: "ProofVerifier", addr: contracts.proofVerifier },
+                        { name: "SettlementGate", addr: contracts.settlementGate },
+                        { name: "USDC", addr: contracts.usdc },
+                      ].map((c) => (
+                        <div key={c.name}>
+                          <div className="text-[10px] text-zinc-600 font-medium">{c.name}</div>
+                          <div className="text-[11px] font-mono text-zinc-400 truncate">{c.addr.slice(0, 10)}...{c.addr.slice(-6)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {provingTask && <ProofModal task={provingTask} onClose={() => setProvingTask(null)} />}
       {showPost && <PostTaskModal onClose={() => setShowPost(false)} onPost={handlePost} />}
-    </>
+    </div>
   );
 }

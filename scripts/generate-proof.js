@@ -33,7 +33,13 @@ async function generateProof(taskId, rawOutput, salt, agentAddress) {
     outputFields.push(BigInt("0x" + (chunk.length ? chunk.toString("hex") : "00")));
   }
 
-  const saltBig = BigInt(salt);
+  // Convert salt to BigInt — if it's not a pure number, hash it
+  let saltBig;
+  try {
+    saltBig = BigInt(salt);
+  } catch {
+    saltBig = BigInt(ethers.keccak256(Buffer.from(salt, "utf8")));
+  }
   const poseidonHash = poseidon.F.toString(poseidon([...outputFields, saltBig]));
   console.log("  Output fields:", outputFields.map(f => f.toString(16).slice(0, 8) + "..."));
   console.log("  Poseidon hash:", poseidonHash.slice(0, 20) + "...");
