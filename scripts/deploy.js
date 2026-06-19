@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-const ARC_TESTNET_RPC = process.env.ARC_TESTNET_RPC || "https://rpc.arc.io/testnet";
+const ARC_TESTNET_RPC = process.env.ARC_TESTNET_RPC || "https://rpc.testnet.arc.network";
 const ARC_CHAIN_ID = parseInt(process.env.ARC_CHAIN_ID || "5042002");
 const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
 

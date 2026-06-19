@@ -13,8 +13,8 @@ module.exports = {
   networks: {
     // Arc Testnet — update RPC + chainId from https://docs.arc.io/arc/references/connect-to-arc
     arcTestnet: {
-      url: process.env.ARC_TESTNET_RPC || "https://rpc.arc.io/testnet",
-      chainId: parseInt(process.env.ARC_CHAIN_ID || "1337"),
+      url: process.env.ARC_TESTNET_RPC || "https://rpc.testnet.arc.network",
+      chainId: parseInt(process.env.ARC_CHAIN_ID || "5042002"),
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       gasPrice: "auto",
     },

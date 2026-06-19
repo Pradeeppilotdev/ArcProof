@@ -264,6 +264,7 @@ function ProofModal({ task, onClose, onSettled, walletClient, publicClient }) {
   const addLog = (msg) => setLog((l) => [...l, { time: new Date().toLocaleTimeString("en", { hour12: false }), msg }]);
 
   async function runProof() {
+    if (!walletClient) { setError("Wallet not connected"); setRunning(false); return; }
     setRunning(true);
     setError(null);
     try {
@@ -370,7 +371,7 @@ function PostTaskModal({ onClose, onPosted, walletClient, publicClient, address 
   const inputStyle = { width: "100%", background: BG, border: `1px solid ${BORDER}`, borderRadius: 7, padding: "9px 11px", color: TEXT, fontFamily: "'JetBrains Mono', monospace", fontSize: 12.5, outline: "none", boxSizing: "border-box" };
 
   async function handle() {
-    if (!output || !reward) return;
+    if (!output || !reward || !walletClient) return;
     setPosting(true);
     setError(null);
     try {
