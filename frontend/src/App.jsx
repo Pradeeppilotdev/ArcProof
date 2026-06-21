@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useAccount, useConnect, useDisconnect, useWalletClient, usePublicClient } from "wagmi";
+import { useAccount, useConnect, useDisconnect, useWriteContract, usePublicClient } from "wagmi";
 import { groth16 } from "snarkjs";
 import { buildPoseidon } from "circomlibjs";
 import { formatUnits, parseUnits } from "viem";
@@ -50,7 +50,7 @@ async function computeOutputHash(rawOutput, saltBig) {
 
 function toBytes32(n) { return "0x" + n.toString(16).padStart(64, "0"); }
 function shorten(a) { return a ? a.slice(0, 6) + "…" + a.slice(-4) : ""; }
-function formatUSDC(v) { return formatUnits(v, 6); }
+function formatUSDC(v) { return v == null ? "0.00" : formatUnits(v, 6); }
 
 const BG = "#0A0A0C";
 const SURFACE = "#131316";
@@ -194,14 +194,14 @@ function Stat({ label, value, color }) {
   );
 }
 
-function TaskRow({ task, onProve, onClaim, proving, address, agentAddrEth }) {
+function TaskRow({ task, onProve, onClaim, proving, address, ready }) {
   const countdown = useCountdown(task.deadline);
   const expired = Number(task.deadline) * 1000 < Date.now();
   const [hover, setHover] = useState(false);
   const isAgent = address && task.agent && address.toLowerCase() === task.agent.toLowerCase();
   const isClient = address && task.client && address.toLowerCase() === task.client.toLowerCase();
-  const canClaim = task.status === "Open" && address && !expired;
-  const canProve = task.status === "Proving" && isAgent && !expired;
+  const canClaim = task.status === "Open" && address && ready && !expired;
+  const canProve = task.status === "Proving" && isAgent && ready && !expired;
 
   return (
     <div
@@ -255,7 +255,7 @@ function TaskRow({ task, onProve, onClaim, proving, address, agentAddrEth }) {
   );
 }
 
-function ProofModal({ task, onClose, onSettled, walletClient, publicClient }) {
+function ProofModal({ task, onClose, onSettled, writeContractAsync, publicClient }) {
   const [stage, setStage] = useState(0);
   const [log, setLog] = useState([]);
   const [running, setRunning] = useState(false);
@@ -264,7 +264,7 @@ function ProofModal({ task, onClose, onSettled, walletClient, publicClient }) {
   const addLog = (msg) => setLog((l) => [...l, { time: new Date().toLocaleTimeString("en", { hour12: false }), msg }]);
 
   async function runProof() {
-    if (!walletClient) { setError("Wallet not connected"); setRunning(false); return; }
+    if (!writeContractAsync) { setError("Wallet not connected"); setRunning(false); return; }
     setRunning(true);
     setError(null);
     try {
@@ -305,7 +305,7 @@ function ProofModal({ task, onClose, onSettled, walletClient, publicClient }) {
       const outputHash = toBytes32(task._outputHashBigInt);
 
       addLog("Sending tx to SettlementGate...");
-      const txHash = await walletClient.writeContract({
+      const txHash = await writeContractAsync({
         address: SG,
         abi: sgAbi,
         functionName: "submitProof",
@@ -362,7 +362,7 @@ function ProofModal({ task, onClose, onSettled, walletClient, publicClient }) {
   );
 }
 
-function PostTaskModal({ onClose, onPosted, walletClient, publicClient, address }) {
+function PostTaskModal({ onClose, onPosted, writeContractAsync, publicClient, address }) {
   const [reward, setReward] = useState("10");
   const [output, setOutput] = useState("");
   const [hours, setHours] = useState("2");
@@ -371,7 +371,7 @@ function PostTaskModal({ onClose, onPosted, walletClient, publicClient, address 
   const inputStyle = { width: "100%", background: BG, border: `1px solid ${BORDER}`, borderRadius: 7, padding: "9px 11px", color: TEXT, fontFamily: "'JetBrains Mono', monospace", fontSize: 12.5, outline: "none", boxSizing: "border-box" };
 
   async function handle() {
-    if (!output || !reward || !walletClient) return;
+    if (!output || !reward || !writeContractAsync) return;
     setPosting(true);
     setError(null);
     try {
@@ -388,29 +388,23 @@ function PostTaskModal({ onClose, onPosted, walletClient, publicClient, address 
         address: USDC, abi: erc20Abi, functionName: "allowance", args: [address, WR],
       });
       if (allowance < rewardParsed) {
-        const approveHash = await walletClient.writeContract({
+        const approveHash = await writeContractAsync({
           address: USDC, abi: erc20Abi, functionName: "approve", args: [WR, rewardParsed],
         });
         await publicClient.waitForTransactionReceipt({ hash: approveHash });
       }
 
       // Post task
-      const txHash = await walletClient.writeContract({
+      const txHash = await writeContractAsync({
         address: WR, abi: wrAbi, functionName: "postTask", args: [rewardParsed, outputHash, deadlineSec],
       });
-      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-      // Extract taskId from logs
-      let taskId = 0;
-      if (receipt.logs && receipt.logs.length > 0) {
-        const topicHash = "0x94a3840a3c3811a7ab2e8a09d5fa4c0620efb445a121ba2e60e5da2d07c091d";
-        for (const log of receipt.logs) {
-          if (log.topics[0] === topicHash) {
-            taskId = Number(BigInt(log.topics[1]));
-            break;
-          }
-        }
-      }
+      // Read the new task ID from chain (nextTaskId - 1)
+      const nextId = await publicClient.readContract({
+        address: WR, abi: wrAbi, functionName: "nextTaskId",
+      });
+      const taskId = Number(nextId - 1n);
 
       // Store rawOutput + salt data for proving
       const taskData = {
@@ -467,7 +461,7 @@ export default function ArcProof() {
   const { address, isConnected } = useAccount();
   const { connectors, connect } = useConnect();
   const { disconnect } = useDisconnect();
-  const { data: walletClient } = useWalletClient();
+  const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
 
   const [tasks, setTasks] = useState([]);
@@ -475,7 +469,7 @@ export default function ArcProof() {
   const [showPost, setShowPost] = useState(false);
   const [loading, setLoading] = useState(true);
   const [claimingIds, setClaimingIds] = useState(new Set());
-  const localData = useRef(new Map());
+  const [claimError, setClaimError] = useState(null);
 
   // Load tasks from chain
   const loadTasks = useCallback(async () => {
@@ -489,21 +483,24 @@ export default function ArcProof() {
         publicClient.readContract({ address: WR, abi: wrAbi, functionName: "getTask", args: [BigInt(i)] })
       );
       const raw = await Promise.all(promises);
-      setTasks(raw.map((t, i) => {
-        const existing = localData.current.get(i);
-        return {
-          id: i,
-          client: t[0],
-          agent: t[1],
-          reward: t[2],
-          outputHash: t[3],
-          deadline: t[4],
-          status: STATUS_MAP[t[5]],
-          _rawOutput: existing?._rawOutput || null,
-          _outputHashBigInt: existing?._outputHashBigInt || null,
-          _salt: existing?._salt || null,
-        };
-      }));
+      setTasks(prev => {
+        const prevMap = new Map(prev.map(t => [t.id, t]));
+        return raw.map((t, i) => {
+          const existing = prevMap.get(i);
+          return {
+            id: i,
+            client: t.client || t[0],
+            agent: t.agent || t[1] || "0x0000000000000000000000000000000000000000",
+            reward: t.reward ?? t[2] ?? 0n,
+            outputHash: t.outputHash || t[3] || "0x0000000000000000000000000000000000000000000000000000000000000000",
+            deadline: t.deadline ?? t[4] ?? 0n,
+            status: STATUS_MAP[t.status ?? t[5]] || "Open",
+            _rawOutput: existing?._rawOutput || null,
+            _outputHashBigInt: existing?._outputHashBigInt || null,
+            _salt: existing?._salt || null,
+          };
+        });
+      });
     } catch (e) {
       console.error("Failed to load tasks:", e);
     }
@@ -514,32 +511,32 @@ export default function ArcProof() {
   useEffect(() => { const iv = setInterval(loadTasks, 15000); return () => clearInterval(iv); }, [loadTasks]);
 
   const handlePosted = (taskData) => {
-    localData.current.set(taskData.id, { _rawOutput: taskData._rawOutput, _outputHashBigInt: taskData._outputHashBigInt, _salt: taskData._salt });
+    setTasks(prev => [...prev, taskData]);
     loadTasks();
   };
 
   const handleClaim = async (taskId) => {
-    if (!walletClient || !publicClient) return;
+    if (!writeContractAsync || !publicClient) return;
     setClaimingIds(prev => new Set(prev).add(taskId));
     try {
-      const hash = await walletClient.writeContract({
+      const hash = await writeContractAsync({
         address: WR, abi: wrAbi, functionName: "claimTask", args: [BigInt(taskId)],
       });
       await publicClient.waitForTransactionReceipt({ hash });
       loadTasks();
     } catch (e) {
-      console.error("Claim failed:", e);
+      setClaimError(e?.reason || e?.shortMessage || e.message || "Claim failed");
+      setTimeout(() => setClaimError(null), 5000);
     }
     setClaimingIds(prev => { const n = new Set(prev); n.delete(taskId); return n; });
   };
 
   const handleProve = (task) => {
-    const cached = localData.current.get(task.id);
-    if (!cached || !cached._rawOutput || !cached._outputHashBigInt) {
+    if (!task._rawOutput || !task._outputHashBigInt) {
       alert("Cannot prove this task: raw output data not found.\n\nYou can only prove tasks you posted in this session (the raw output + salt are stored locally).");
       return;
     }
-    setProvingTask({ ...task, _rawOutput: cached._rawOutput, _outputHashBigInt: cached._outputHashBigInt, _salt: cached._salt });
+    setProvingTask(task);
   };
 
   const handleSettled = (taskId) => {
@@ -613,8 +610,11 @@ export default function ArcProof() {
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <span style={{ fontSize: 13, fontWeight: 600 }}>Task Registry</span>
-            {isConnected && <Btn tone="primary" onClick={() => setShowPost(true)}>+ Post Task</Btn>}
+            {isConnected && writeContractAsync && <Btn tone="primary" onClick={() => setShowPost(true)}>+ Post Task</Btn>}
           </div>
+          {claimError && (
+            <div style={{ fontSize: 11.5, color: RED, background: "rgba(229,83,75,0.08)", border: `1px solid rgba(229,83,75,0.3)`, borderRadius: 8, padding: "8px 12px", marginBottom: 10 }}>{claimError}</div>
+          )}
           {loading ? (
             <div style={{ textAlign: "center", padding: 40, color: MUTED, fontSize: 13 }}>Loading tasks from chain…</div>
           ) : tasks.length === 0 ? (
@@ -622,7 +622,7 @@ export default function ArcProof() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {tasks.map((t) => (
-                <TaskRow key={t.id} task={t} onProve={handleProve} onClaim={handleClaim} proving={claimingIds.has(t.id)} address={address} />
+                <TaskRow key={t.id} task={t} onProve={handleProve} onClaim={handleClaim} proving={claimingIds.has(t.id)} address={address} ready={!!writeContractAsync} />
               ))}
             </div>
           )}
@@ -667,7 +667,7 @@ export default function ArcProof() {
           task={provingTask}
           onClose={() => setProvingTask(null)}
           onSettled={handleSettled}
-          walletClient={walletClient}
+          writeContractAsync={writeContractAsync}
           publicClient={publicClient}
         />
       )}
@@ -675,7 +675,7 @@ export default function ArcProof() {
         <PostTaskModal
           onClose={() => setShowPost(false)}
           onPosted={handlePosted}
-          walletClient={walletClient}
+          writeContractAsync={writeContractAsync}
           publicClient={publicClient}
           address={address}
         />
