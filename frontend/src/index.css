@@ -1,6 +1,19 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 @theme {
   --color-background: #fafafa;
   --color-foreground: #1e293b;
@@ -21,7 +34,14 @@
   --color-border: #e2e8f0;
   --color-input: #e2e8f0;
   --color-ring: #162f46;
+  --color-plum: #62295b;
+  --color-mauve: #824f77;
+  --color-indigo: #463c7b;
+  --color-deepblue: #252988;
   --radius: 0.5rem;
+  --animate-fade-up: fade-up 0.6s ease-out;
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-scale-in: scale-in 0.4s ease-out;
 }
 
 body {
@@ -39,7 +59,6 @@ body {
 ::-webkit-scrollbar {
   width: 5px;
 }
-
 ::-webkit-scrollbar-thumb {
   background: #e2e8f0;
   border-radius: 3px;

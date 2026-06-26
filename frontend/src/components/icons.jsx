@@ -1,9 +1,8 @@
 export function LogoIcon({ className }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-      <path d="M2 17l10 5 10-5" />
-      <path d="M2 12l10 5 10-5" />
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+      <path d="M3 20C3 9 7 4 12 4S21 9 21 20" />
+      <path d="M8 20C8 13 10 9.5 12 9.5S16 13 16 20" />
     </svg>
   );
 }

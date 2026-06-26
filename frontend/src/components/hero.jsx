@@ -1,7 +1,7 @@
 export default function Hero() {
   return (
-    <section className="text-center pt-10 pb-2">
-      <div className="text-[10px] font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-4">
+    <section className="text-center pt-12 pb-6 animate-fade-up">
+      <div className="text-[9px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-5">
         ZK-verified settlement on Arc
       </div>
       <h1 className="text-[36px] sm:text-[44px] font-semibold leading-[1.1] tracking-[-0.02em]">

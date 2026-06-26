@@ -9,14 +9,16 @@ export default function Header() {
   const { disconnect } = useDisconnect();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-md bg-primary text-primary-foreground flex items-center justify-center">
-            <LogoIcon className="w-3.5 h-3.5" />
+            <LogoIcon className="w-4 h-4" />
           </div>
-          <span className="text-sm font-semibold text-primary">ArcProof</span>
-          <span className="text-[10px] text-muted-foreground font-mono ml-1">Arc Testnet</span>
+          <div className="flex items-baseline gap-2.5">
+            <span className="text-sm font-semibold tracking-tight text-primary">ArcProof</span>
+            <span className="text-[9px] text-muted-foreground font-mono border border-border rounded-full px-2 py-0.5 leading-none">Arc Testnet</span>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {!isConnected ? (

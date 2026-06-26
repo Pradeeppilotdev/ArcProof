@@ -4,10 +4,11 @@ import { WR, STATUS_MAP, wrAbi } from "./lib/abis";
 import Header from "./components/header";
 import Hero from "./components/hero";
 import Stats from "./components/stats";
+import PostTaskSection from "./components/post-task-section";
+import MyTasks from "./components/my-tasks";
 import TaskRegistry from "./components/task-registry";
 import HowItWorks from "./components/how-it-works";
 import ProofModal from "./components/proof-modal";
-import PostTaskModal from "./components/post-task-modal";
 
 const PROOF_STORAGE_KEY = "arcproof-proofs";
 
@@ -18,7 +19,6 @@ export default function ArcProof() {
 
   const [tasks, setTasks] = useState([]);
   const [provingTask, setProvingTask] = useState(null);
-  const [showPost, setShowPost] = useState(false);
   const [loading, setLoading] = useState(true);
   const [claimingIds, setClaimingIds] = useState(new Set());
   const [claimError, setClaimError] = useState(null);
@@ -54,6 +54,9 @@ export default function ArcProof() {
             _rawOutput: fromStorageRaw || existing?._rawOutput || null,
             _outputHashBigInt: fromStorageHash || existing?._outputHashBigInt || null,
             _salt: fromStorageSalt || existing?._salt || null,
+            _postTxHash: fromStorage?._postTxHash || existing?._postTxHash || null,
+            _claimTxHash: fromStorage?._claimTxHash || existing?._claimTxHash || null,
+            _proveTxHash: fromStorage?._proveTxHash || existing?._proveTxHash || null,
           };
         });
       });
@@ -66,14 +69,19 @@ export default function ArcProof() {
   useEffect(() => { loadTasks(); }, [loadTasks]);
   useEffect(() => { const iv = setInterval(loadTasks, 15000); return () => clearInterval(iv); }, [loadTasks]);
 
-  const handlePosted = (taskData) => {
+  const saveToStorage = (taskId, fields) => {
     const stored = JSON.parse(localStorage.getItem(PROOF_STORAGE_KEY) || "{}");
-    stored[taskData.id] = {
+    stored[taskId] = { ...(stored[taskId] || {}), ...fields };
+    localStorage.setItem(PROOF_STORAGE_KEY, JSON.stringify(stored));
+  };
+
+  const handlePosted = (taskData) => {
+    saveToStorage(taskData.id, {
       _rawOutput: taskData._rawOutput.map(f => f.toString()),
       _outputHashBigInt: taskData._outputHashBigInt.toString(),
       _salt: taskData._salt.toString(),
-    };
-    localStorage.setItem(PROOF_STORAGE_KEY, JSON.stringify(stored));
+      _postTxHash: taskData.postTxHash,
+    });
     setTasks(prev => [...prev, taskData]);
     loadTasks();
   };
@@ -86,6 +94,7 @@ export default function ArcProof() {
         address: WR, abi: wrAbi, functionName: "claimTask", args: [BigInt(taskId)],
       });
       await publicClient.waitForTransactionReceipt({ hash });
+      saveToStorage(taskId, { _claimTxHash: hash });
       loadTasks();
     } catch (e) {
       setClaimError(e?.reason || e?.shortMessage || e.message || "Claim failed");
@@ -102,7 +111,10 @@ export default function ArcProof() {
     setProvingTask(task);
   };
 
-  const handleSettled = () => { loadTasks(); };
+  const handleSettled = (taskId, txHash) => {
+    if (txHash) saveToStorage(taskId, { _proveTxHash: txHash });
+    loadTasks();
+  };
 
   const settled = tasks.filter(t => t.status === "Settled");
   const escrowed = tasks.filter(t => t.status === "Open" || t.status === "Proving").reduce((a, t) => a + t.reward, 0n);
@@ -111,25 +123,35 @@ export default function ArcProof() {
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       <Header />
-      <main className="max-w-[980px] mx-auto px-6 py-10 space-y-8 pb-16">
-        <Hero />
-        <Stats
-          escrowed={escrowed}
-          settledCount={settled.length}
-          settledTotal={settledTotal}
-          activeCount={tasks.filter(t => t.status === "Open" || t.status === "Proving").length}
-        />
-        <TaskRegistry
-          tasks={tasks}
-          loading={loading}
-          address={address}
-          claimingIds={claimingIds}
-          claimError={claimError}
-          onClaim={handleClaim}
-          onProve={handleProve}
-          onPost={() => setShowPost(true)}
-        />
-        <HowItWorks />
+      <main className="max-w-[980px] mx-auto px-6 py-10 pb-20">
+        <div className="space-y-6">
+          <Hero />
+          <Stats
+            escrowed={escrowed}
+            settledCount={settled.length}
+            settledTotal={settledTotal}
+            activeCount={tasks.filter(t => t.status === "Open" || t.status === "Proving").length}
+          />
+        </div>
+        <div className="mt-8 space-y-8">
+          <PostTaskSection
+            writeContractAsync={writeContractAsync}
+            publicClient={publicClient}
+            address={address}
+            onPosted={handlePosted}
+          />
+          <MyTasks tasks={tasks} address={address} />
+          <TaskRegistry
+            tasks={tasks}
+            loading={loading}
+            address={address}
+            claimingIds={claimingIds}
+            claimError={claimError}
+            onClaim={handleClaim}
+            onProve={handleProve}
+          />
+          <HowItWorks />
+        </div>
       </main>
       {provingTask && (
         <ProofModal
@@ -138,15 +160,6 @@ export default function ArcProof() {
           onSettled={handleSettled}
           writeContractAsync={writeContractAsync}
           publicClient={publicClient}
-        />
-      )}
-      {showPost && (
-        <PostTaskModal
-          onClose={() => setShowPost(false)}
-          onPosted={handlePosted}
-          writeContractAsync={writeContractAsync}
-          publicClient={publicClient}
-          address={address}
         />
       )}
     </div>

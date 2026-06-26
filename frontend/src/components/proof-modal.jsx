@@ -65,6 +65,7 @@ function Pipeline({ stage }) {
 }
 
 export default function ProofModal({ task, onClose, onSettled, writeContractAsync, publicClient }) {
+  let txHashRef = null;
   const [stage, setStage] = useState(0);
   const [log, setLog] = useState([]);
   const [running, setRunning] = useState(false);
@@ -121,6 +122,7 @@ export default function ProofModal({ task, onClose, onSettled, writeContractAsyn
         functionName: "submitProof",
         args: [BigInt(task.id), outputHash, { a, b, c }, pSignals],
       });
+      txHashRef = txHash;
       addLog("Tx sent: " + txHash.slice(0, 18) + "...");
 
       addLog("Waiting for confirmation...");
@@ -180,7 +182,7 @@ export default function ProofModal({ task, onClose, onSettled, writeContractAsyn
           {stage === 4 && (
             <div className="text-center space-y-3">
               <div className="text-xs text-muted-foreground">{formatUSDC(task.reward)} USDC settled</div>
-              <Button variant="outline" size="sm" onClick={() => { onSettled(task.id); onClose(); }}>Close</Button>
+              <Button variant="outline" size="sm" onClick={() => { onSettled(task.id, txHashRef); onClose(); }}>Close</Button>
             </div>
           )}
         </div>
