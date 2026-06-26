@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@theme {
+  --color-background: #0a0a0c;
+  --color-foreground: #f2f2f4;
+  --color-card: #111113;
+  --color-card-foreground: #f2f2f4;
+  --color-popover: #131316;
+  --color-popover-foreground: #f2f2f4;
+  --color-primary: #6e6bfb;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1a1a1e;
+  --color-secondary-foreground: #f2f2f4;
+  --color-muted: #1a1a1e;
+  --color-muted-foreground: #87878f;
+  --color-accent: #16161a;
+  --color-accent-foreground: #f2f2f4;
+  --color-destructive: #e5484d;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #1d1d22;
+  --color-input: #1d1d22;
+  --color-ring: #6e6bfb;
+  --radius: 0.625rem;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 900px 500px at 50% -10%, #6e6bfb14 0%, transparent 60%),
+    var(--color-background);
+  color: var(--color-foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "tnum" 1, "cv11" 1;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-feature-settings: "tnum" 1;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1d1d22;
+  border-radius: 3px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+@keyframes soft-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(110, 107, 251, 0.35); }
+  50% { box-shadow: 0 0 0 5px rgba(110, 107, 251, 0); }
+}
+
+.glow-dot {
+  animation: soft-pulse 2.4s ease-in-out infinite;
+}

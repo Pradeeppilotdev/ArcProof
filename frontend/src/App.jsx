@@ -9,6 +9,8 @@ import HowItWorks from "./components/how-it-works";
 import ProofModal from "./components/proof-modal";
 import PostTaskModal from "./components/post-task-modal";
 
+const PROOF_STORAGE_KEY = "arcproof-proofs";
+
 export default function ArcProof() {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
@@ -32,10 +34,15 @@ export default function ArcProof() {
         publicClient.readContract({ address: WR, abi: wrAbi, functionName: "getTask", args: [BigInt(i)] })
       );
       const raw = await Promise.all(promises);
+      const stored = JSON.parse(localStorage.getItem(PROOF_STORAGE_KEY) || "{}");
       setTasks(prev => {
         const prevMap = new Map(prev.map(t => [t.id, t]));
         return raw.map((t, i) => {
           const existing = prevMap.get(i);
+          const fromStorage = stored[i];
+          const fromStorageRaw = fromStorage ? fromStorage._rawOutput.map(s => BigInt(s)) : null;
+          const fromStorageHash = fromStorage ? BigInt(fromStorage._outputHashBigInt) : null;
+          const fromStorageSalt = fromStorage ? BigInt(fromStorage._salt) : null;
           return {
             id: i,
             client: t.client || t[0],
@@ -44,9 +51,9 @@ export default function ArcProof() {
             outputHash: t.outputHash || t[3] || "0x0000000000000000000000000000000000000000000000000000000000000000",
             deadline: t.deadline ?? t[4] ?? 0n,
             status: STATUS_MAP[t.status ?? t[5]] || "Open",
-            _rawOutput: existing?._rawOutput || null,
-            _outputHashBigInt: existing?._outputHashBigInt || null,
-            _salt: existing?._salt || null,
+            _rawOutput: fromStorageRaw || existing?._rawOutput || null,
+            _outputHashBigInt: fromStorageHash || existing?._outputHashBigInt || null,
+            _salt: fromStorageSalt || existing?._salt || null,
           };
         });
       });
@@ -60,6 +67,13 @@ export default function ArcProof() {
   useEffect(() => { const iv = setInterval(loadTasks, 15000); return () => clearInterval(iv); }, [loadTasks]);
 
   const handlePosted = (taskData) => {
+    const stored = JSON.parse(localStorage.getItem(PROOF_STORAGE_KEY) || "{}");
+    stored[taskData.id] = {
+      _rawOutput: taskData._rawOutput.map(f => f.toString()),
+      _outputHashBigInt: taskData._outputHashBigInt.toString(),
+      _salt: taskData._salt.toString(),
+    };
+    localStorage.setItem(PROOF_STORAGE_KEY, JSON.stringify(stored));
     setTasks(prev => [...prev, taskData]);
     loadTasks();
   };
@@ -81,8 +95,8 @@ export default function ArcProof() {
   };
 
   const handleProve = (task) => {
-    if (!task._rawOutput || !task._outputHashBigInt) {
-      alert("Cannot prove this task: raw output data not found.\n\nYou can only prove tasks you posted in this session (the raw output + salt are stored locally).");
+    if (!task._rawOutput || !task._outputHashBigInt || !task._salt) {
+      alert("Cannot prove this task: raw output data not found.\n\nYou can only prove tasks you posted in this session (the raw output + salt are stored in localStorage).");
       return;
     }
     setProvingTask(task);

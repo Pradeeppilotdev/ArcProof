@@ -68,7 +68,7 @@ export default function PostTaskModal({ onClose, onPosted, writeContractAsync, p
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => !posting && onClose()}>
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => !posting && onClose()}>
       <div className="bg-card border border-border rounded-xl shadow-lg w-full max-w-[400px] max-h-[85vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
         <div className="p-6 pb-3">
           <div className="flex items-center justify-between">
@@ -80,28 +80,28 @@ export default function PostTaskModal({ onClose, onPosted, writeContractAsync, p
         </div>
         <div className="px-6 pb-4 space-y-4">
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1.5">
+            <div className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5 tracking-tight">
               <DollarIcon className="w-3 h-3" />
               USDC Reward
             </div>
             <Input value={reward} onChange={(e) => setReward(e.target.value)} placeholder="10.00" className="font-mono" />
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1.5">
+            <div className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5 tracking-tight">
               <ZapIcon className="w-3 h-3" />
               Expected Output
             </div>
             <Input value={output} onChange={(e) => setOutput(e.target.value)} placeholder="e.g. Analyze this dataset..." className="font-mono" />
-            <div className="text-[10px] text-muted-foreground mt-1">Hashed via Poseidon on-chain; agent proves pre-image with ZK proof</div>
+            <div className="text-[10.5px] text-muted-foreground/80 mt-1">Hashed via Poseidon on-chain; agent proves pre-image with ZK proof</div>
           </div>
           <div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1.5">
+            <div className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5 tracking-tight">
               <ClockIcon className="w-3 h-3" />
               Deadline (hours)
             </div>
             <Input value={hours} onChange={(e) => setHours(e.target.value)} placeholder="2" className="font-mono" />
           </div>
-          {error && <div className="text-xs text-destructive text-center">{error}</div>}
+          {error && <div className="text-xs text-red-400 text-center">{error}</div>}
         </div>
         <div className="p-6 pt-0">
           <Button onClick={handle} disabled={posting} className="w-full justify-center gap-2">

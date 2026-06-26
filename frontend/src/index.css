@@ -1,25 +1,26 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @theme {
-  --color-background: #0a0a0b;
-  --color-foreground: #fafafa;
-  --color-card: #141416;
-  --color-card-foreground: #fafafa;
-  --color-popover: #141416;
-  --color-popover-foreground: #fafafa;
-  --color-primary: #fafafa;
-  --color-primary-foreground: #0a0a0b;
-  --color-secondary: #27272a;
-  --color-secondary-foreground: #fafafa;
-  --color-muted: #3f3f46;
-  --color-muted-foreground: #a1a1aa;
-  --color-accent: #27272a;
-  --color-accent-foreground: #fafafa;
-  --color-destructive: #7f1d1d;
-  --color-destructive-foreground: #fafafa;
-  --color-border: #27272a;
-  --color-input: #27272a;
-  --color-ring: #fafafa;
+  --color-background: #fafafa;
+  --color-foreground: #1e293b;
+  --color-card: #ffffff;
+  --color-card-foreground: #1e293b;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1e293b;
+  --color-primary: #162f46;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f1f5f9;
+  --color-secondary-foreground: #162f46;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #5a82a6;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #162f46;
+  --color-destructive: #9a7b4f;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #162f46;
   --radius: 0.5rem;
 }
 
@@ -31,16 +32,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
 ::-webkit-scrollbar {
   width: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #e2e8f0;
   border-radius: 3px;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.7); }
 }

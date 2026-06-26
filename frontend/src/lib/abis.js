@@ -1,4 +1,4 @@
-import contracts from "../contracts.json";
+import contracts from "./contracts.json";
 
 export const WR = contracts.workRegistry;
 export const SG = contracts.settlementGate;

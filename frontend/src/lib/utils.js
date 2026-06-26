@@ -1,7 +1,9 @@
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 import { formatUnits } from "viem";
 
-export function cn(...classes) {
-  return classes.filter(Boolean).join(" ");
+export function cn(...inputs) {
+  return twMerge(clsx(inputs));
 }
 
 export function formatUSDC(v) {
