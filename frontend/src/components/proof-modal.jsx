@@ -139,7 +139,7 @@ export default function ProofModal({ task, onClose, onSettled, writeContractAsyn
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => !running && onClose()}>
-      <div className="bg-card border border-border rounded-xl shadow-lg w-full max-w-[480px] max-h-[85vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-[rgba(26,26,46,0.9)] border border-border rounded-xl shadow-lg w-full max-w-[480px] max-h-[85vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
         <div className="p-6 pb-3">
           <div className="flex items-start justify-between">
             <div>

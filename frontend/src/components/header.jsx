@@ -9,7 +9,7 @@ export default function Header() {
   const { disconnect } = useDisconnect();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b border-border bg-[rgba(26,26,46,0.75)] backdrop-blur-xl">
       <div className="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-md bg-primary text-primary-foreground flex items-center justify-center">

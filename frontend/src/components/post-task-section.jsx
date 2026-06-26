@@ -116,7 +116,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       {error && <div className="text-xs text-destructive mb-3">{error}</div>}
 
       {success && (
-        <div className="rounded-lg bg-indigo/[0.06] border border-indigo/20 px-4 py-3 flex items-center justify-between animate-scale-in">
+        <div className="rounded-lg bg-indigo/[0.2] border border-indigo/30 px-4 py-3 flex items-center justify-between animate-scale-in">
           <div>
             <span className="text-xs font-medium text-indigo">Task #{success.taskId} posted</span>
             <span className="text-[10px] text-muted-foreground ml-2">{reward} USDC locked in escrow</span>
