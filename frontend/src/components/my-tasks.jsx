@@ -1,4 +1,4 @@
-import { CheckCircleIcon, ExternalLinkIcon } from "./icons";
+import { ExternalLinkIcon } from "./icons";
 import { formatUSDC, shorten } from "../lib/utils";
 import { txUrl } from "../lib/explorer";
 
@@ -34,7 +34,6 @@ function LifecycleLink({ label, txHash, active }) {
 }
 
 function TaskCard({ task }) {
-  const s = STATUS_STYLES[task.status] || {};
   const stages = [
     { label: "Posted", txHash: task._postTxHash, active: true },
     { label: "Accepted", txHash: task._claimTxHash, active: task.agent !== "0x0000000000000000000000000000000000000000" },
@@ -42,19 +41,19 @@ function TaskCard({ task }) {
   ];
 
   return (
-    <div className="rounded-lg border border-border bg-card px-4 py-3.5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-fade-up">
-      <div className="flex items-center justify-between mb-2">
+    <div className="rounded-lg border border-border bg-card px-3 sm:px-4 py-3 sm:py-3.5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-fade-up">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2">
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground font-mono">#{task.id}</span>
           <StatusBadge status={task.status} />
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {stages.map((s) => (
             <LifecycleLink key={s.label} label={s.label} txHash={s.txHash} active={s.active} />
           ))}
         </div>
       </div>
-      <div className="flex items-center gap-4 text-xs">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 text-xs">
         <span className="font-semibold tabular-nums text-primary">{formatUSDC(task.reward)} <span className="text-[10px] text-muted-foreground font-normal">USDC</span></span>
         <span className="text-muted-foreground font-mono text-[10px]">hash: {shorten(task.outputHash)}</span>
         {task._rawOutput && (
@@ -78,7 +77,7 @@ export default function MyTasks({ tasks, address }) {
         </div>
       </div>
       {mine.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card p-8 text-center">
+        <div className="rounded-lg border border-border bg-card p-6 sm:p-8 text-center">
           <div className="text-sm text-muted-foreground">You haven&apos;t posted any tasks yet.</div>
         </div>
       ) : (

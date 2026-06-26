@@ -76,9 +76,10 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
   if (!address) return null;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5 shadow-sm animate-fade-up">
+    <section className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-sm animate-fade-up">
       <div className="text-sm font-semibold text-primary mb-4">Post a Task</div>
-      <div className="grid grid-cols-3 gap-4 mb-4">
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
         <div>
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1.5">
             <DollarIcon className="w-3 h-3" />
@@ -100,15 +101,15 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-3 sm:mb-4">
         <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1.5">
           <ZapIcon className="w-3 h-3" />
           Expected Output
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Input value={output} onChange={(e) => setOutput(e.target.value)} placeholder="e.g. Analysis result: QmXy..." className="font-mono flex-1" />
           {output && (
-            <span className="text-[10px] text-muted-foreground self-center shrink-0">Hashed via Poseidon</span>
+            <span className="text-[10px] text-muted-foreground self-start sm:self-center shrink-0">Hashed via Poseidon</span>
           )}
         </div>
       </div>
@@ -116,7 +117,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       {error && <div className="text-xs text-destructive mb-3">{error}</div>}
 
       {success && (
-        <div className="rounded-lg bg-indigo/[0.2] border border-indigo/30 px-4 py-3 flex items-center justify-between animate-scale-in">
+        <div className="rounded-lg bg-indigo/[0.2] border border-indigo/30 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-0 justify-between animate-scale-in">
           <div>
             <span className="text-xs font-medium text-indigo">Task #{success.taskId} posted</span>
             <span className="text-[10px] text-muted-foreground ml-2">{reward} USDC locked in escrow</span>
