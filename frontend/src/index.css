@@ -44,14 +44,24 @@
   --animate-scale-in: scale-in 0.4s ease-out;
 }
 
+html {
+  background: #1a1a3e;
+}
+
 body {
-  background: linear-gradient(180deg, #1a1a3e 0%, #2d1b4e 25%, #463c7b 50%, #6b3a5a 72%, #c47b5a 100%);
-  background-attachment: fixed;
   min-height: 100vh;
   color: var(--color-foreground);
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, #1a1a3e 0%, #2d1b4e 25%, #463c7b 50%, #6b3a5a 72%, #c47b5a 100%);
 }
 
 .font-mono {

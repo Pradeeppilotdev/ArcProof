@@ -117,12 +117,12 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       {error && <div className="text-xs text-destructive mb-3">{error}</div>}
 
       {success && (
-        <div className="rounded-lg bg-indigo/[0.2] border border-indigo/30 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-0 justify-between animate-scale-in">
+        <div className="rounded-lg bg-[#818cf8]/[0.15] border border-[#818cf8]/30 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-0 justify-between animate-scale-in">
           <div>
-            <span className="text-xs font-medium text-indigo">Task #{success.taskId} posted</span>
+            <span className="text-xs font-medium text-[#818cf8]">Task #{success.taskId} posted</span>
             <span className="text-[10px] text-muted-foreground ml-2">{reward} USDC locked in escrow</span>
           </div>
-          <a href={txUrl(success.txHash)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-indigo hover:text-indigo/80 font-medium">
+          <a href={txUrl(success.txHash)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-[#818cf8] hover:text-[#818cf8]/80 font-medium">
             Explorer <ExternalLinkIcon className="w-3 h-3" />
           </a>
         </div>

@@ -4,10 +4,10 @@ import { useCountdown } from "../hooks/use-countdown";
 import { formatUSDC, shorten } from "../lib/utils";
 
 const STATUS_STYLES = {
-  Open: { dot: "bg-plum", text: "text-plum" },
-  Proving: { dot: "bg-mauve", text: "text-mauve" },
-  Settled: { dot: "bg-indigo", text: "text-indigo" },
-  Slashed: { dot: "bg-deepblue", text: "text-deepblue" },
+  Open: { dot: "bg-[#c084b5]", text: "text-[#c084b5]" },
+  Proving: { dot: "bg-[#e8799a]", text: "text-[#e8799a]" },
+  Settled: { dot: "bg-[#818cf8]", text: "text-[#818cf8]" },
+  Slashed: { dot: "bg-[#9a7b4f]", text: "text-[#9a7b4f]" },
 };
 
 function StatusBadge({ status }) {
@@ -31,7 +31,7 @@ function TaskRow({ task, address, onClaim, onProve, claiming, index }) {
 
   return (
     <div
-      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 rounded-lg border border-border bg-card px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-fade-up"
+      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 rounded-lg border border-border bg-card px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm transition-shadow duration-300 hover:shadow-md animate-fade-up"
       style={{ animationDelay: `${delay}s` }}
     >
       <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-0">
@@ -86,7 +86,7 @@ function TaskRow({ task, address, onClaim, onProve, claiming, index }) {
           </Button>
         )}
         {task.status === "Settled" && (
-          <span className="flex items-center gap-1 text-xs text-indigo font-medium">
+          <span className="flex items-center gap-1 text-xs text-[#818cf8] font-medium">
             <CheckCircleIcon className="w-4 h-4" />
             Settled
           </span>

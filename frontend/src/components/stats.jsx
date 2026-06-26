@@ -20,7 +20,7 @@ export default function Stats({ escrowed, settledCount, settledTotal, activeCoun
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
       {items.map((item, i) => (
-        <div key={item.label} className={`rounded-xl border border-border ${CARD[i].bg} p-3 sm:p-4 sm:pt-3.5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${ANIMS[i]}`}>
+        <div key={item.label} className={`rounded-xl border border-border ${CARD[i].bg} p-3 sm:p-4 sm:pt-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md ${ANIMS[i]}`}>
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1">{item.label}</div>
           <div className="text-xl sm:text-2xl font-semibold tabular-nums text-primary tracking-tight">{item.value}</div>
         </div>

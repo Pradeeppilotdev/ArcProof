@@ -3,10 +3,10 @@ import { formatUSDC, shorten } from "../lib/utils";
 import { txUrl } from "../lib/explorer";
 
 const STATUS_STYLES = {
-  Open: { dot: "bg-plum", text: "text-plum" },
-  Proving: { dot: "bg-mauve", text: "text-mauve" },
-  Settled: { dot: "bg-indigo", text: "text-indigo" },
-  Slashed: { dot: "bg-deepblue", text: "text-deepblue" },
+  Open: { dot: "bg-[#c084b5]", text: "text-[#c084b5]" },
+  Proving: { dot: "bg-[#e8799a]", text: "text-[#e8799a]" },
+  Settled: { dot: "bg-[#818cf8]", text: "text-[#818cf8]" },
+  Slashed: { dot: "bg-[#9a7b4f]", text: "text-[#9a7b4f]" },
 };
 
 function StatusBadge({ status }) {
@@ -27,7 +27,7 @@ function LifecycleLink({ label, txHash, active }) {
     );
   }
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-indigo hover:text-indigo/80 px-2 py-0.5 rounded border border-indigo/20 hover:border-indigo/40 transition-colors">
+    <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-[#818cf8] hover:text-[#818cf8]/80 px-2 py-0.5 rounded border border-[#818cf8]/20 hover:border-[#818cf8]/40 transition-colors">
       {label} <ExternalLinkIcon className="w-2.5 h-2.5" />
     </a>
   );
@@ -41,7 +41,7 @@ function TaskCard({ task }) {
   ];
 
   return (
-    <div className="rounded-lg border border-border bg-card px-3 sm:px-4 py-3 sm:py-3.5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-fade-up">
+    <div className="rounded-lg border border-border bg-card px-3 sm:px-4 py-3 sm:py-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md animate-fade-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2">
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground font-mono">#{task.id}</span>
