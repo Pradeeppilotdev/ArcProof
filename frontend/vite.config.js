@@ -19,4 +19,5 @@ export default defineConfig({
     port: 5173,
     host: true,
   },
+  envDir: path.resolve(__dirname, ".."),
 });

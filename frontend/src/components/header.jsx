@@ -1,11 +1,12 @@
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
+import { useAppKit } from "@reown/appkit/react";
 import { Button } from "./ui/button";
 import { LogoIcon, WalletIcon } from "./icons";
 import { shorten } from "../lib/utils";
 
 export default function Header() {
   const { address, isConnected } = useAccount();
-  const { connectors, connect } = useConnect();
+  const { open } = useAppKit();
   const { disconnect } = useDisconnect();
 
   return (
@@ -20,7 +21,7 @@ export default function Header() {
         </div>
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {!isConnected ? (
-            <Button size="sm" onClick={() => connect({ connector: connectors[0] })} className="text-xs sm:text-sm px-2 sm:px-3">
+            <Button size="sm" onClick={() => open()} className="text-xs sm:text-sm px-2 sm:px-3">
               <WalletIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span className="hidden sm:inline">Connect Wallet</span>
               <span className="sm:hidden">Connect</span>
