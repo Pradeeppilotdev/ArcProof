@@ -8,7 +8,7 @@ export default function Hero() {
         USDC only settles when<br />
         <span className="text-[#c47b5a]">work is proven</span>
       </h1>
-      <p className="mt-3 text-sm text-white/50 max-w-md mx-auto leading-relaxed px-4 sm:px-0">
+      <p className="mt-3 text-sm text-white/70 max-w-md mx-auto leading-relaxed px-4 sm:px-0">
         No human approval. No time-locks. A Groth16 proof gates every payment, end to end.
       </p>
     </section>

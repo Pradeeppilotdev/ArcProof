@@ -27,14 +27,13 @@ function TaskRow({ task, address, onClaim, onProve, claiming, index }) {
   const canClaim = task.status === "Open" && address && !expired;
   const canProve = task.status === "Proving" && isAgent && !expired;
   const hasAgent = task.agent !== "0x0000000000000000000000000000000000000000";
-  const delay = 0.05 * (index % 10);
 
   return (
     <div
       className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 rounded-lg border border-border bg-card px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm transition-shadow duration-300 hover:shadow-md animate-fade-up"
-      style={{ animationDelay: `${delay}s` }}
+      style={{ animationDelay: `${0.05 * (index % 10)}s` }}
     >
-      <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-0">
+      <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-0 flex-1 min-w-0">
         <div className="flex items-center gap-3 sm:gap-4">
           <span className="text-xs text-muted-foreground font-mono">#{task.id}</span>
           <StatusBadge status={task.status} />
@@ -59,34 +58,33 @@ function TaskRow({ task, address, onClaim, onProve, claiming, index }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-[11px] sm:text-xs font-mono text-foreground min-w-0 flex-wrap sm:flex-nowrap">
-        <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">client</span>
-        <span className="shrink-0">{shorten(task.client)}</span>
-        <span className="text-muted-foreground hidden sm:inline mx-0.5">&rarr;</span>
-        <span className="text-[8px] sm:text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">agent</span>
+      <div className="flex items-center gap-2 text-xs font-mono text-white/60 min-w-0 flex-wrap sm:flex-nowrap">
+        <span>{shorten(task.client)}</span>
+        <span className="text-white/20 hidden sm:inline">&rarr;</span>
+        <span className="text-white/20 sm:hidden">/</span>
         {hasAgent ? (
-          <span className="shrink-0">{shorten(task.agent)}</span>
+          <span>{shorten(task.agent)}</span>
         ) : (
-          <span className="text-muted-foreground shrink-0">unclaimed</span>
+          <span className="text-white/30 italic text-[10px] font-sans">no agent</span>
         )}
-        <span className="text-muted-foreground mx-0.5 sm:ml-1 sm:mr-1.5">&middot;</span>
-        <span className={`shrink-0 ${expired ? "text-muted-foreground" : ""}`}>{countdown}</span>
+        <span className="text-white/15 mx-0.5 sm:ml-1 sm:mr-1.5">&middot;</span>
+        <span className={`text-[11px] ${expired ? "text-white/30" : "text-white/60"}`}>{countdown}</span>
       </div>
 
       <div className="hidden sm:flex items-center gap-3 shrink-0">
         <span className="text-sm font-semibold tabular-nums">{formatUSDC(task.reward)} <span className="text-[10px] text-muted-foreground font-normal">USDC</span></span>
         {canClaim && (
-          <Button size="sm" variant="outline" disabled={claiming || !address} onClick={() => onClaim(task.id)}>
+          <Button size="sm" variant="outline" disabled={claiming || !address} onClick={() => onClaim(task.id)} className="min-w-[80px] justify-center">
             {claiming ? "Claiming..." : "Claim"}
           </Button>
         )}
         {canProve && (
-          <Button size="sm" onClick={() => onProve(task)}>
-            Prove
+          <Button size="sm" onClick={() => onProve(task)} className="min-w-[80px] justify-center">
+            Prove Work
           </Button>
         )}
         {task.status === "Settled" && (
-          <span className="flex items-center gap-1 text-xs text-[#818cf8] font-medium">
+          <span className="flex items-center gap-1.5 text-xs text-[#818cf8] font-medium">
             <CheckCircleIcon className="w-4 h-4" />
             Settled
           </span>
@@ -97,7 +95,8 @@ function TaskRow({ task, address, onClaim, onProve, claiming, index }) {
 }
 
 export default function TaskRegistry({ tasks, loading, address, claimingIds, claimError, onClaim, onProve }) {
-  const open = tasks.filter(t => t.status === "Open" || t.status === "Proving");
+  const isExpired = (t) => Number(t.deadline) * 1000 < Date.now();
+  const open = tasks.filter(t => (t.status === "Open" || t.status === "Proving") && !isExpired(t));
 
   return (
     <section className="animate-fade-up [animation-delay:0.2s]">

@@ -19,27 +19,66 @@ function StatusBadge({ status }) {
   );
 }
 
-function LifecycleLink({ label, txHash, active }) {
-  const url = txUrl(txHash);
-  if (!active || !url) {
-    return (
-      <span className="text-[10px] text-muted-foreground/50 px-2 py-0.5 rounded border border-border/50 cursor-default">{label}</span>
-    );
-  }
+const STEP_CONFIG = [
+  { key: "posted", label: "Posted", color: "#818cf8" },
+  { key: "accepted", label: "Accepted", color: "#818cf8" },
+  { key: "settled", label: "Settled", color: "#818cf8" },
+];
+
+function Stepper({ task }) {
+  const stages = [
+    { key: "posted", done: !!task._postTxHash, hash: task._postTxHash },
+    { key: "accepted", done: task.agent !== "0x0000000000000000000000000000000000000000", hash: task._claimTxHash },
+    { key: "settled", done: task.status === "Settled", hash: task._proveTxHash },
+  ];
+  const activeCount = stages.filter(s => s.done).length;
+
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-[#818cf8] hover:text-[#818cf8]/80 px-2 py-0.5 rounded border border-[#818cf8]/20 hover:border-[#818cf8]/40 transition-colors">
-      {label} <ExternalLinkIcon className="w-2.5 h-2.5" />
-    </a>
+    <div className="flex items-center gap-0">
+      {stages.map((s, i) => {
+        const url = s.hash ? txUrl(s.hash) : null;
+        const isActive = s.done;
+        const isLast = i === stages.length - 1;
+        const label = STEP_CONFIG[i].label;
+
+        return (
+          <div key={s.key} className="flex items-center">
+            {url ? (
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center gap-1.5 text-[10px] font-medium transition-colors
+                  ${isActive ? "text-[#818cf8]" : "text-white/20"}`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${isActive ? "bg-[#818cf8]" : "bg-white/15"} ${isActive ? "shadow-[0_0_6px_rgba(129,140,248,0.5)]" : ""}`}
+                />
+                {label}
+                <ExternalLinkIcon className="w-2 h-2" />
+              </a>
+            ) : (
+              <span
+                className={`inline-flex items-center gap-1.5 text-[10px] font-medium
+                  ${isActive ? "text-[#818cf8]" : "text-white/20"}`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${isActive ? "bg-[#818cf8]" : "bg-white/15"} ${isActive ? "shadow-[0_0_6px_rgba(129,140,248,0.5)]" : ""}`}
+                />
+                {label}
+              </span>
+            )}
+            {!isLast && (
+              <span className={`mx-2 w-6 h-px ${activeCount > i ? "bg-[#818cf8]/40" : "bg-white/10"}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
 function TaskCard({ task }) {
-  const stages = [
-    { label: "Posted", txHash: task._postTxHash, active: true },
-    { label: "Accepted", txHash: task._claimTxHash, active: task.agent !== "0x0000000000000000000000000000000000000000" },
-    { label: "Settled", txHash: task._proveTxHash, active: task.status === "Settled" },
-  ];
-
   return (
     <div className="rounded-lg border border-border bg-card px-3 sm:px-4 py-3 sm:py-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md animate-fade-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2">
@@ -47,11 +86,7 @@ function TaskCard({ task }) {
           <span className="text-xs text-muted-foreground font-mono">#{task.id}</span>
           <StatusBadge status={task.status} />
         </div>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {stages.map((s) => (
-            <LifecycleLink key={s.label} label={s.label} txHash={s.txHash} active={s.active} />
-          ))}
-        </div>
+        <Stepper task={task} />
       </div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 text-xs">
         <span className="font-semibold tabular-nums text-primary">{formatUSDC(task.reward)} <span className="text-[10px] text-muted-foreground font-normal">USDC</span></span>
