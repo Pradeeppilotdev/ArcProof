@@ -1,7 +1,7 @@
 import { useAccount, useDisconnect } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { Button } from "./ui/button";
-import { LogoIcon, WalletIcon } from "./icons";
+import { LogoIcon } from "./icons";
 import { shorten } from "../lib/utils";
 
 export default function Header() {
@@ -21,15 +21,16 @@ export default function Header() {
         </div>
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {!isConnected ? (
-            <Button size="sm" onClick={() => open()} className="text-xs sm:text-sm px-2 sm:px-3">
-              <WalletIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <Button size="sm" onClick={() => open()} className="glass-card text-xs sm:text-sm px-3 sm:px-4">
               <span className="hidden sm:inline">Connect Wallet</span>
               <span className="sm:hidden">Connect</span>
             </Button>
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
               <span className="text-[11px] sm:text-xs text-muted-foreground font-mono">{shorten(address)}</span>
-              <Button variant="ghost" size="sm" onClick={disconnect} className="text-xs sm:text-sm">Disconnect</Button>
+              <Button size="sm" onClick={disconnect} className="glass-card text-xs sm:text-sm">
+                Disconnect
+              </Button>
             </div>
           )}
         </div>

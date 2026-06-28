@@ -2,75 +2,72 @@ import { ExternalLinkIcon } from "./icons";
 import { formatUSDC, shorten } from "../lib/utils";
 import { txUrl } from "../lib/explorer";
 
-const STATUS_STYLES = {
-  Open: { dot: "bg-[#c084b5]", text: "text-[#c084b5]" },
-  Proving: { dot: "bg-[#e8799a]", text: "text-[#e8799a]" },
-  Settled: { dot: "bg-[#818cf8]", text: "text-[#818cf8]" },
-  Slashed: { dot: "bg-[#9a7b4f]", text: "text-[#9a7b4f]" },
-};
-
-function StatusBadge({ status }) {
-  const s = STATUS_STYLES[status] || { dot: "bg-muted-foreground", text: "text-muted-foreground" };
-  return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${s.text}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-      {status}
-    </span>
-  );
-}
-
-const STEP_CONFIG = [
-  { key: "posted", label: "Posted", color: "#818cf8" },
-  { key: "accepted", label: "Accepted", color: "#818cf8" },
-  { key: "settled", label: "Settled", color: "#818cf8" },
-];
+const STEP_LABELS = ["Posted", "Proving", "Settled"];
 
 function Stepper({ task }) {
   const stages = [
-    { key: "posted", done: !!task._postTxHash, hash: task._postTxHash },
-    { key: "accepted", done: task.agent !== "0x0000000000000000000000000000000000000000", hash: task._claimTxHash },
-    { key: "settled", done: task.status === "Settled", hash: task._proveTxHash },
+    { done: true, hash: task._postTxHash },
+    { done: task.status === "Proving" || task.status === "Settled", hash: task.status === "Settled" ? task._proveTxHash : task._claimTxHash },
+    { done: task.status === "Settled", hash: task._proveTxHash },
   ];
-  const activeCount = stages.filter(s => s.done).length;
+  const activeIdx = stages.findLastIndex(s => s.done);
 
   return (
     <div className="flex items-center gap-0">
       {stages.map((s, i) => {
         const url = s.hash ? txUrl(s.hash) : null;
         const isActive = s.done;
+        const isCurrent = i === activeIdx;
         const isLast = i === stages.length - 1;
-        const label = STEP_CONFIG[i].label;
+
+        const dot = (
+          <span
+            className={`w-2 h-2 rounded-full ${
+              isActive
+                ? "bg-[#818cf8] shadow-[0_0_8px_rgba(129,140,248,0.5)]"
+                : "bg-white/25"
+            }`}
+          />
+        );
+
+        const label = (
+          <span
+            className={`text-[10px] font-medium ${
+              isActive ? "text-[#818cf8]" : "text-white/35"
+            }`}
+          >
+            {STEP_LABELS[i]}
+          </span>
+        );
+
+        const connector = !isLast && (
+          <span
+            className={`mx-2 w-6 h-px ${
+              s.done ? "bg-[#818cf8]/40" : "bg-white/15"
+            }`}
+          />
+        );
 
         return (
-          <div key={s.key} className="flex items-center">
+          <div key={STEP_LABELS[i]} className="flex items-center">
             {url ? (
               <a
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex items-center gap-1.5 text-[10px] font-medium transition-colors
-                  ${isActive ? "text-[#818cf8]" : "text-white/20"}`}
+                className="inline-flex items-center gap-1.5 transition-colors"
               >
-                <span
-                  className={`w-2 h-2 rounded-full ${isActive ? "bg-[#818cf8]" : "bg-white/15"} ${isActive ? "shadow-[0_0_6px_rgba(129,140,248,0.5)]" : ""}`}
-                />
+                {dot}
                 {label}
-                <ExternalLinkIcon className="w-2 h-2" />
+                {isCurrent && <ExternalLinkIcon className="w-2.5 h-2.5 text-[#818cf8]" />}
               </a>
             ) : (
-              <span
-                className={`inline-flex items-center gap-1.5 text-[10px] font-medium
-                  ${isActive ? "text-[#818cf8]" : "text-white/20"}`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full ${isActive ? "bg-[#818cf8]" : "bg-white/15"} ${isActive ? "shadow-[0_0_6px_rgba(129,140,248,0.5)]" : ""}`}
-                />
+              <span className="inline-flex items-center gap-1.5">
+                {dot}
                 {label}
               </span>
             )}
-            {!isLast && (
-              <span className={`mx-2 w-6 h-px ${activeCount > i ? "bg-[#818cf8]/40" : "bg-white/10"}`} />
-            )}
+            {connector}
           </div>
         );
       })}
@@ -82,10 +79,7 @@ function TaskCard({ task }) {
   return (
     <div className="rounded-lg border border-border bg-card px-3 sm:px-4 py-3 sm:py-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md animate-fade-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2">
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground font-mono">#{task.id}</span>
-          <StatusBadge status={task.status} />
-        </div>
+        <span className="text-xs text-muted-foreground font-mono">#{task.id}</span>
         <Stepper task={task} />
       </div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 text-xs">

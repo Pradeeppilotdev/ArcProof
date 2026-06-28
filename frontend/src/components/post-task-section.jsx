@@ -76,7 +76,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
   if (!address) return null;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-sm animate-fade-up">
+    <section className="rounded-xl border border-border bg-card glass-edge p-4 sm:p-5 shadow-sm animate-fade-up">
       <div className="text-sm font-semibold text-primary mb-4">Post a Task</div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">

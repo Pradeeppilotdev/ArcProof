@@ -1,10 +1,10 @@
 import { formatUSDC } from "../lib/utils";
 
 const CARD = [
-  { label: "Escrowed", bg: "bg-plum/[0.15]" },
+  { label: "Network Escrow", bg: "bg-plum/[0.15]" },
   { label: "Proofs verified", bg: "bg-mauve/[0.15]" },
   { label: "USDC settled", bg: "bg-indigo/[0.15]" },
-  { label: "Active tasks", bg: "bg-deepblue/[0.15]" },
+  { label: "Active Tasks", bg: "bg-deepblue/[0.15]" },
 ];
 
 const ANIMS = ["animate-fade-up", "animate-fade-up [animation-delay:0.1s]", "animate-fade-up [animation-delay:0.2s]", "animate-fade-up [animation-delay:0.3s]"];

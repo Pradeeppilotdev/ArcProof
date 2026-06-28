@@ -9,7 +9,7 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-sm">
+    <section className="rounded-xl border border-border bg-card glass-edge p-4 sm:p-6 shadow-sm">
       <div className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mb-4 sm:mb-5">How settlement works</div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
         {steps.map((s, i) => (

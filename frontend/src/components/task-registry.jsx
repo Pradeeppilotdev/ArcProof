@@ -1,5 +1,5 @@
 import { Button } from "./ui/button";
-import { CheckCircleIcon } from "./icons";
+import { CheckCircleIcon, ListIcon } from "./icons";
 import { useCountdown } from "../hooks/use-countdown";
 import { formatUSDC, shorten } from "../lib/utils";
 
@@ -114,8 +114,9 @@ export default function TaskRegistry({ tasks, loading, address, claimingIds, cla
           <div className="text-sm text-muted-foreground">Loading tasks from chain...</div>
         </div>
       ) : open.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card p-8 sm:p-10 text-center">
-          <div className="text-sm text-muted-foreground">No open tasks. Connect wallet and post one.</div>
+        <div className="rounded-lg border border-border bg-card py-6 sm:py-7 flex flex-col items-center justify-center gap-2 animate-fade-in">
+          <ListIcon className="w-5 h-5 text-white/20" />
+          <div className="text-xs text-muted-foreground">{address ? "No tasks available on the network right now." : "Connect your wallet to browse open tasks."}</div>
         </div>
       ) : (
         <div className="space-y-2">
