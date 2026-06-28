@@ -5,11 +5,11 @@ export default function Hero() {
         ZK-verified settlement on Arc
       </div>
       <h1 className="text-[28px] sm:text-[36px] md:text-[44px] font-semibold leading-[1.1] tracking-[-0.02em] text-white px-2 sm:px-0">
-        USDC only settles when<br />
-        <span className="text-[#c47b5a]">work is proven</span>
+        Pay with USDC when<br />
+        <span className="text-[#c47b5a]">a proof proves the work</span>
       </h1>
       <p className="mt-3 text-sm text-white/70 max-w-md mx-auto leading-relaxed px-4 sm:px-0">
-        No human approval. No time-locks. A Groth16 proof gates every payment, end to end.
+        Lock USDC behind a secret answer. Anyone who knows the secret can claim the reward — no judges, no disputes.
       </p>
     </section>
   );

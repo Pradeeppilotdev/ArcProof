@@ -82,11 +82,13 @@ function TaskCard({ task }) {
         <span className="text-xs text-muted-foreground font-mono">#{task.id}</span>
         <Stepper task={task} />
       </div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-4 text-xs">
-        <span className="font-semibold tabular-nums text-primary">{formatUSDC(task.reward)} <span className="text-[10px] text-muted-foreground font-normal">USDC</span></span>
-        <span className="text-muted-foreground font-mono text-[10px]">hash: {shorten(task.outputHash)}</span>
+      {task.description && (
+        <div className="text-sm text-white/90 mb-1.5 leading-snug">{task.description}</div>
+      )}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-mono text-white/40">
+        <span className="font-semibold tabular-nums text-primary">{formatUSDC(task.reward)} USDC</span>
         {task._rawOutput && (
-          <span className="text-muted-foreground text-[10px]">raw output stored</span>
+          <span className="text-white/30 text-[10px]">secret stored locally</span>
         )}
       </div>
     </div>
@@ -107,7 +109,7 @@ export default function MyTasks({ tasks, address }) {
       </div>
       {mine.length === 0 ? (
         <div className="rounded-lg border border-border bg-card p-6 sm:p-8 text-center">
-          <div className="text-sm text-muted-foreground">You haven&apos;t posted any tasks yet.</div>
+          <div className="text-sm text-muted-foreground">You haven&apos;t posted any challenges yet. Post one above to get started.</div>
         </div>
       ) : (
         <div className="space-y-2">

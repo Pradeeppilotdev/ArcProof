@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { groth16 } from "snarkjs";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import { CloseIcon, ZapIcon } from "./icons";
 import { formatUSDC, shorten, toBytes32 } from "../lib/utils";
+import { chunkOutput } from "../lib/poseidon";
 import { SG, sgAbi } from "../lib/abis";
 
 function Pipeline({ stage }) {
@@ -70,12 +72,16 @@ export default function ProofModal({ task, onClose, onSettled, writeContractAsyn
   const [log, setLog] = useState([]);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState(null);
+  const [rawOutputInput, setRawOutputInput] = useState("");
+
+  const needsRawOutput = !task._rawOutput;
 
   const addLog = (msg) => setLog((l) => [...l, { time: new Date().toLocaleTimeString("en", { hour12: false }), msg }]);
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   async function runProof() {
     if (!writeContractAsync) { setError("Wallet not connected"); setRunning(false); return; }
+    if (needsRawOutput && !rawOutputInput.trim()) { setError("Enter the raw output to prove against this task"); setRunning(false); return; }
     setRunning(true);
     setError(null);
     try {
@@ -91,11 +97,12 @@ export default function ProofModal({ task, onClose, onSettled, writeContractAsyn
 
       setStage(2); addLog("Building witness input..."); await sleep(300);
       const salt = task._salt;
+      const rawChunks = needsRawOutput ? chunkOutput(rawOutputInput) : task._rawOutput;
       const input = {
-        rawOutput: task._rawOutput.map(f => f.toString()),
+        rawOutput: rawChunks.map(f => f.toString()),
         salt: salt.toString(),
         taskId: String(task.id),
-        outputHash: task._outputHashBigInt.toString(),
+        outputHash: (task._outputHashBigInt || 0n).toString(),
         agentAddr: BigInt(task.agent).toString(),
       };
       addLog("Circuit inputs: taskId=" + task.id + " agent=" + shorten(task.agent));
@@ -153,6 +160,17 @@ export default function ProofModal({ task, onClose, onSettled, writeContractAsyn
             )}
           </div>
         </div>
+        {needsRawOutput && stage === 0 && (
+          <div className="px-6 pb-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5">Your Raw Output</div>
+            <Input
+              value={rawOutputInput}
+              onChange={(e) => setRawOutputInput(e.target.value)}
+              placeholder='e.g. "Paris" — type the exact secret answer'
+              className="font-mono text-sm"
+            />
+          </div>
+        )}
         <div className="px-6">
           <Pipeline stage={stage} />
         </div>

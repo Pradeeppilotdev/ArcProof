@@ -10,14 +10,15 @@ import { txUrl } from "../lib/explorer";
 
 export default function PostTaskSection({ writeContractAsync, publicClient, address, onPosted }) {
   const [reward, setReward] = useState("10");
-  const [output, setOutput] = useState("");
+  const [description, setDescription] = useState("");
+  const [secret, setSecret] = useState("");
   const [hours, setHours] = useState("2");
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
   async function handle() {
-    if (!output || !reward || !writeContractAsync || !address) return;
+    if (!secret || !reward || !description || !writeContractAsync || !address) return;
     setPosting(true);
     setError(null);
     setSuccess(null);
@@ -26,7 +27,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       const deadlineSec = BigInt(Math.floor(Date.now() / 1000) + parseInt(hours) * 3600);
       const salt = BigInt("0x" + Array.from(crypto.getRandomValues(new Uint8Array(28))).map(b => b.toString(16).padStart(2, "0")).join(""));
 
-      const outputHashBigInt = await computeOutputHash(output, salt);
+      const outputHashBigInt = await computeOutputHash(secret, salt);
       const outputHash = toBytes32(outputHashBigInt);
 
       const allowance = await publicClient.readContract({
@@ -40,7 +41,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       }
 
       const txHash = await writeContractAsync({
-        address: WR, abi: wrAbi, functionName: "postTask", args: [rewardParsed, outputHash, deadlineSec],
+        address: WR, abi: wrAbi, functionName: "postTask", args: [rewardParsed, outputHash, deadlineSec, salt],
       });
       await publicClient.waitForTransactionReceipt({ hash: txHash });
 
@@ -51,13 +52,14 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
 
       onPosted({
         id: taskId,
+        description,
         reward: rewardParsed,
         outputHash,
         client: address,
         agent: "0x0000000000000000000000000000000000000000",
         deadline: deadlineSec,
         status: "Open",
-        _rawOutput: chunkOutput(output),
+        _rawOutput: chunkOutput(secret),
         _outputHashBigInt: outputHashBigInt,
         _salt: salt,
         postTxHash: txHash,
@@ -65,7 +67,8 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
 
       setSuccess({ taskId, txHash });
       setReward("10");
-      setOutput("");
+      setDescription("");
+      setSecret("");
       setHours("2");
     } catch (err) {
       setError(err.message || "Posting failed");
@@ -77,7 +80,16 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
 
   return (
     <section className="rounded-xl border border-border bg-card glass-edge p-4 sm:p-5 shadow-sm animate-fade-up">
-      <div className="text-sm font-semibold text-primary mb-4">Post a Task</div>
+      <div className="text-sm font-semibold text-primary mb-1">Post a Challenge</div>
+      <div className="text-[11px] text-muted-foreground mb-4">Lock USDC behind a secret answer. Whoever knows the answer can claim it.</div>
+
+      <div className="mb-3 sm:mb-4">
+        <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1.5">
+          <ZapIcon className="w-3 h-3" />
+          Challenge Description <span className="text-white/40 normal-case font-normal">(visible to everyone)</span>
+        </div>
+        <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. What is the capital of France?" className="font-mono flex-1" />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
         <div>
@@ -104,11 +116,11 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       <div className="mb-3 sm:mb-4">
         <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1.5">
           <ZapIcon className="w-3 h-3" />
-          Expected Output
+          Secret Answer <span className="text-white/40 normal-case font-normal">(hashed with ZK — nobody sees this)</span>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <Input value={output} onChange={(e) => setOutput(e.target.value)} placeholder="e.g. Analysis result: QmXy..." className="font-mono flex-1" />
-          {output && (
+          <Input value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="e.g. Paris" className="font-mono flex-1" />
+          {secret && (
             <span className="text-[10px] text-muted-foreground self-start sm:self-center shrink-0">Hashed via Poseidon</span>
           )}
         </div>

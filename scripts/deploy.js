@@ -95,7 +95,7 @@ async function main() {
   };
 
   fs.writeFileSync(
-    path.join(__dirname, "../frontend/src/contracts.json"),
+    path.join(__dirname, "../frontend/src/lib/contracts.json"),
     JSON.stringify(addresses, null, 2)
   );
   console.log("\n✓ Contract addresses written to frontend/src/contracts.json");

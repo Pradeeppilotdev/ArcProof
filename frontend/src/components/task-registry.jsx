@@ -30,65 +30,51 @@ function TaskRow({ task, address, onClaim, onProve, claiming, index }) {
 
   return (
     <div
-      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 rounded-lg border border-border bg-card px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm transition-shadow duration-300 hover:shadow-md animate-fade-up"
+      className="flex flex-col rounded-lg border border-border bg-card px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm transition-shadow duration-300 hover:shadow-md animate-fade-up"
       style={{ animationDelay: `${0.05 * (index % 10)}s` }}
     >
-      <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-0 flex-1 min-w-0">
-        <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground font-mono">#{task.id}</span>
           <StatusBadge status={task.status} />
         </div>
-        <div className="flex items-center gap-2 sm:hidden">
-          <span className="text-sm font-semibold tabular-nums">{formatUSDC(task.reward)} <span className="text-[10px] text-muted-foreground font-normal">USDC</span></span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold tabular-nums hidden sm:inline">{formatUSDC(task.reward)} <span className="text-[10px] text-muted-foreground font-normal">USDC</span></span>
           {canClaim && (
-            <Button size="sm" variant="outline" disabled={claiming || !address} onClick={() => onClaim(task.id)} className="h-7 text-[10px] px-2">
+            <Button size="sm" variant="outline" disabled={claiming || !address} onClick={() => onClaim(task.id)} className="h-7 text-[10px] px-2 min-w-[70px] justify-center">
               {claiming ? "..." : "Claim"}
             </Button>
           )}
           {canProve && (
-            <Button size="sm" onClick={() => onProve(task)} className="h-7 text-[10px] px-2">
+            <Button size="sm" onClick={() => onProve(task)} className="h-7 text-[10px] px-2 min-w-[70px] justify-center">
               Prove
             </Button>
           )}
           {task.status === "Settled" && (
-            <span className="flex items-center gap-1 text-xs text-indigo font-medium">
+            <span className="flex items-center gap-1 text-xs text-[#818cf8] font-medium">
               <CheckCircleIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Settled</span>
             </span>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-xs font-mono text-white/60 min-w-0 flex-wrap sm:flex-nowrap">
+      {task.description && (
+        <div className="text-sm text-white/90 mb-1.5 leading-snug">{task.description}</div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-mono text-white/40">
         <span>{shorten(task.client)}</span>
-        <span className="text-white/20 hidden sm:inline">&rarr;</span>
-        <span className="text-white/20 sm:hidden">/</span>
+        <span className="text-white/15">&rarr;</span>
         {hasAgent ? (
           <span>{shorten(task.agent)}</span>
         ) : (
-          <span className="text-white/30 italic text-[10px] font-sans">no agent</span>
+          <span className="italic text-white/25 font-sans">no agent</span>
         )}
-        <span className="text-white/15 mx-0.5 sm:ml-1 sm:mr-1.5">&middot;</span>
-        <span className={`text-[11px] ${expired ? "text-white/30" : "text-white/60"}`}>{countdown}</span>
-      </div>
-
-      <div className="hidden sm:flex items-center gap-3 shrink-0">
-        <span className="text-sm font-semibold tabular-nums">{formatUSDC(task.reward)} <span className="text-[10px] text-muted-foreground font-normal">USDC</span></span>
-        {canClaim && (
-          <Button size="sm" variant="outline" disabled={claiming || !address} onClick={() => onClaim(task.id)} className="min-w-[80px] justify-center">
-            {claiming ? "Claiming..." : "Claim"}
-          </Button>
-        )}
-        {canProve && (
-          <Button size="sm" onClick={() => onProve(task)} className="min-w-[80px] justify-center">
-            Prove Work
-          </Button>
-        )}
-        {task.status === "Settled" && (
-          <span className="flex items-center gap-1.5 text-xs text-[#818cf8] font-medium">
-            <CheckCircleIcon className="w-4 h-4" />
-            Settled
-          </span>
-        )}
+        <span className="text-white/10">&middot;</span>
+        <span className={`${expired ? "text-white/25" : "text-white/50"}`}>{countdown}</span>
+        <span className="text-white/10">&middot;</span>
+        <span className="text-white/30">{formatUSDC(task.reward)} USDC</span>
       </div>
     </div>
   );
@@ -116,7 +102,11 @@ export default function TaskRegistry({ tasks, loading, address, claimingIds, cla
       ) : open.length === 0 ? (
         <div className="rounded-lg border border-border bg-card py-6 sm:py-7 flex flex-col items-center justify-center gap-2 animate-fade-in">
           <ListIcon className="w-5 h-5 text-white/20" />
-          <div className="text-xs text-muted-foreground">{address ? "No tasks available on the network right now." : "Connect your wallet to browse open tasks."}</div>
+          <div className="text-xs text-muted-foreground text-center px-6">
+            {address
+              ? "No open challenges yet. Post one above — lock USDC behind a secret answer."
+              : "Connect your wallet to browse open challenges."}
+          </div>
         </div>
       ) : (
         <div className="space-y-2">

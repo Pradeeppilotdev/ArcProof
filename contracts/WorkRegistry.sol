@@ -20,6 +20,7 @@ contract WorkRegistry {
         bytes32 outputHash;      // keccak256 of the expected output spec
         uint64  deadline;        // unix timestamp — miss it, stake is slashed
         TaskStatus status;
+        uint256 salt;            // ZK proof salt — public so agent can construct witness
     }
 
     // ─── State ────────────────────────────────────────────────────────────────
@@ -32,7 +33,7 @@ contract WorkRegistry {
 
     // ─── Events ───────────────────────────────────────────────────────────────
 
-    event TaskPosted(uint256 indexed taskId, address indexed client, uint256 reward, bytes32 outputHash, uint64 deadline);
+    event TaskPosted(uint256 indexed taskId, address indexed client, uint256 reward, bytes32 outputHash, uint64 deadline, uint256 salt);
     event TaskClaimed(uint256 indexed taskId, address indexed agent);
     event TaskSettled(uint256 indexed taskId, address indexed agent, uint256 reward);
     event TaskSlashed(uint256 indexed taskId, address indexed client, uint256 refund);
@@ -62,11 +63,13 @@ contract WorkRegistry {
      * @param reward        USDC amount (6 decimals)
      * @param outputHash    keccak256 of the expected output — agent must prove against this
      * @param deadline      Unix timestamp. Agent must prove before this or stake is slashed.
+     * @param _salt         ZK salt — stored on-chain so the proving agent can read it
      */
     function postTask(
         uint256 reward,
         bytes32 outputHash,
-        uint64 deadline
+        uint64 deadline,
+        uint256 _salt
     ) external returns (uint256 taskId) {
         if (reward == 0) revert ZeroReward();
         if (deadline <= block.timestamp) revert DeadlinePassed();
@@ -81,10 +84,11 @@ contract WorkRegistry {
             reward:     reward,
             outputHash: outputHash,
             deadline:   deadline,
-            status:     TaskStatus.Open
+            status:     TaskStatus.Open,
+            salt:       _salt
         });
 
-        emit TaskPosted(taskId, msg.sender, reward, outputHash, deadline);
+        emit TaskPosted(taskId, msg.sender, reward, outputHash, deadline, _salt);
     }
 
     // ─── Agent Actions ────────────────────────────────────────────────────────

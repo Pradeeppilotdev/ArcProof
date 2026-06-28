@@ -9,8 +9,11 @@ import MyTasks from "./components/my-tasks";
 import TaskRegistry from "./components/task-registry";
 import HowItWorks from "./components/how-it-works";
 import ProofModal from "./components/proof-modal";
+import ErrorBoundary from "./components/error-boundary";
 
 const PROOF_STORAGE_KEY = "arcproof-proofs";
+const DESC_STORAGE_KEY = "arcproof-descriptions";
+const DESC_PREFIX = "arcproof-desc-";
 
 export default function ArcProof() {
   const { address } = useAccount();
@@ -40,20 +43,23 @@ export default function ArcProof() {
         return raw.map((t, i) => {
           const existing = prevMap.get(i);
           const fromStorage = stored[i];
-          const fromStorageRaw = fromStorage ? fromStorage._rawOutput.map(s => BigInt(s)) : null;
-          const fromStorageHash = fromStorage ? BigInt(fromStorage._outputHashBigInt) : null;
-          const fromStorageSalt = fromStorage ? BigInt(fromStorage._salt) : null;
+          const fromStorageRaw = fromStorage?._rawOutput ? fromStorage._rawOutput.map(s => BigInt(s)) : null;
+          const fromStorageHash = fromStorage?._outputHashBigInt ? BigInt(fromStorage._outputHashBigInt) : null;
+          const fromStorageSalt = fromStorage?._salt ? BigInt(fromStorage._salt) : null;
+          const chainOutputHash = t.outputHash || t[3] || "0x0000000000000000000000000000000000000000000000000000000000000000";
+          const desc = localStorage.getItem(DESC_PREFIX + i) || "";
           return {
             id: i,
             client: t.client || t[0],
             agent: t.agent || t[1] || "0x0000000000000000000000000000000000000000",
             reward: t.reward ?? t[2] ?? 0n,
-            outputHash: t.outputHash || t[3] || "0x0000000000000000000000000000000000000000000000000000000000000000",
+            outputHash: chainOutputHash,
             deadline: t.deadline ?? t[4] ?? 0n,
             status: STATUS_MAP[t.status ?? t[5]] || "Open",
+            description: desc || existing?.description || (existing?._rawOutput ? "Prove by entering the original secret" : ""),
             _rawOutput: fromStorageRaw || existing?._rawOutput || null,
-            _outputHashBigInt: fromStorageHash || existing?._outputHashBigInt || null,
-            _salt: fromStorageSalt || existing?._salt || null,
+            _outputHashBigInt: fromStorageHash || existing?._outputHashBigInt || BigInt(chainOutputHash),
+            _salt: (t.salt ?? t[6]) ?? fromStorageSalt ?? existing?._salt ?? 0n,
             _postTxHash: fromStorage?._postTxHash || existing?._postTxHash || null,
             _claimTxHash: fromStorage?._claimTxHash || existing?._claimTxHash || null,
             _proveTxHash: fromStorage?._proveTxHash || existing?._proveTxHash || null,
@@ -82,6 +88,9 @@ export default function ArcProof() {
       _salt: taskData._salt.toString(),
       _postTxHash: taskData.postTxHash,
     });
+    if (taskData.description) {
+      localStorage.setItem(DESC_PREFIX + taskData.id, taskData.description);
+    }
     setTasks(prev => [...prev, taskData]);
     loadTasks();
   };
@@ -104,10 +113,6 @@ export default function ArcProof() {
   };
 
   const handleProve = (task) => {
-    if (!task._rawOutput || !task._outputHashBigInt || !task._salt) {
-      alert("Cannot prove this task: raw output data not found.\n\nYou can only prove tasks you posted in this session (the raw output + salt are stored in localStorage).");
-      return;
-    }
     setProvingTask(task);
   };
 
@@ -121,47 +126,49 @@ export default function ArcProof() {
   const settledTotal = settled.reduce((a, t) => a + t.reward, 0n);
 
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased">
-      <Header />
-      <main className="max-w-[980px] mx-auto px-6 py-10 pb-20">
-        <div className="space-y-6">
-          <Hero />
-          <Stats
-            escrowed={escrowed}
-            settledCount={settled.length}
-            settledTotal={settledTotal}
-            activeCount={tasks.filter(t => t.status === "Open" || t.status === "Proving").length}
-          />
-        </div>
-        <div className="mt-8 space-y-8">
-          <PostTaskSection
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background text-foreground antialiased">
+        <Header />
+        <main className="max-w-[980px] mx-auto px-6 py-10 pb-20">
+          <div className="space-y-6">
+            <Hero />
+            <Stats
+              escrowed={escrowed}
+              settledCount={settled.length}
+              settledTotal={settledTotal}
+              activeCount={tasks.filter(t => t.status === "Open" || t.status === "Proving").length}
+            />
+          </div>
+          <div className="mt-8 space-y-8">
+            <PostTaskSection
+              writeContractAsync={writeContractAsync}
+              publicClient={publicClient}
+              address={address}
+              onPosted={handlePosted}
+            />
+            <MyTasks tasks={tasks} address={address} />
+            <TaskRegistry
+              tasks={tasks}
+              loading={loading}
+              address={address}
+              claimingIds={claimingIds}
+              claimError={claimError}
+              onClaim={handleClaim}
+              onProve={handleProve}
+            />
+            <HowItWorks />
+          </div>
+        </main>
+        {provingTask && (
+          <ProofModal
+            task={provingTask}
+            onClose={() => setProvingTask(null)}
+            onSettled={handleSettled}
             writeContractAsync={writeContractAsync}
             publicClient={publicClient}
-            address={address}
-            onPosted={handlePosted}
           />
-          <MyTasks tasks={tasks} address={address} />
-          <TaskRegistry
-            tasks={tasks}
-            loading={loading}
-            address={address}
-            claimingIds={claimingIds}
-            claimError={claimError}
-            onClaim={handleClaim}
-            onProve={handleProve}
-          />
-          <HowItWorks />
-        </div>
-      </main>
-      {provingTask && (
-        <ProofModal
-          task={provingTask}
-          onClose={() => setProvingTask(null)}
-          onSettled={handleSettled}
-          writeContractAsync={writeContractAsync}
-          publicClient={publicClient}
-        />
-      )}
-    </div>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 }

@@ -1,6 +1,6 @@
 const CHAIN_ID = 5042002;
 const EXPLORERS = {
-  5042002: "https://explorer.testnet.arc.network",
+  5042002: "https://testnet.arcscan.app",
 };
 
 export function txUrl(hash) {

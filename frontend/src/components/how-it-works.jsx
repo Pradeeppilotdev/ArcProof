@@ -3,14 +3,14 @@ const ANIMS = ["animate-fade-up", "animate-fade-up [animation-delay:0.1s]", "ani
 
 export default function HowItWorks() {
   const steps = [
-    { num: "01", title: "Client posts task", desc: "USDC locked in WorkRegistry with an outputHash and deadline." },
-    { num: "02", title: "Agent proves work", desc: "Groth16 ZK proof shows knowledge of the pre-image, off-chain via snarkjs." },
-    { num: "03", title: "USDC settles", desc: "Groth16Verifier checks the pairing on-chain. USDC transfers atomically." },
+    { num: "01", title: "Post a challenge", desc: "Write a description and a secret answer. The answer is hashed with ZK and stored on-chain. Nobody can see it — not even the contract." },
+    { num: "02", title: "Claim & prove", desc: "Someone claims the challenge. They enter the secret answer in their browser. A Groth16 proof is generated locally — the answer stays private." },
+    { num: "03", title: "Settle automatically", desc: "The proof is verified on-chain. If valid, USDC is released instantly. No judge, no dispute, no waiting." },
   ];
 
   return (
     <section className="rounded-xl border border-border bg-card glass-edge p-4 sm:p-6 shadow-sm">
-      <div className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mb-4 sm:mb-5">How settlement works</div>
+      <div className="text-[9px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mb-4 sm:mb-5">How it works</div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
         {steps.map((s, i) => (
           <div key={s.num} className={`${i > 0 ? "border-t sm:border-t-0 sm:border-l border-border pt-5 sm:pt-0 sm:pl-8" : ""} ${ANIMS[i]}`}>
