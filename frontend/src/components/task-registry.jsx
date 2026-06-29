@@ -41,12 +41,12 @@ function TaskRow({ task, address, onClaim, onProve, claiming, index }) {
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold tabular-nums hidden sm:inline">{formatUSDC(task.reward)} <span className="text-[10px] text-muted-foreground font-normal">USDC</span></span>
           {canClaim && (
-            <Button size="sm" variant="outline" disabled={claiming || !address} onClick={() => onClaim(task.id)} className="h-7 text-[10px] px-2 min-w-[70px] justify-center">
+            <Button disabled={claiming || !address} onClick={() => onClaim(task.id)} className="glass-card rounded-full text-[10px] px-3 py-1 min-w-[70px] justify-center disabled:opacity-50">
               {claiming ? "..." : "Claim"}
             </Button>
           )}
           {canProve && (
-            <Button size="sm" onClick={() => onProve(task)} className="h-7 text-[10px] px-2 min-w-[70px] justify-center">
+            <Button onClick={() => onProve(task)} className="glass-card rounded-full text-[10px] px-3 py-1 min-w-[70px] justify-center">
               Prove
             </Button>
           )}

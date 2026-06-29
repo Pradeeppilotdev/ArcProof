@@ -24,6 +24,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
     setSuccess(null);
     try {
       const rewardParsed = parseUnits(reward, 6);
+      const rewardFormatted = reward;
       const deadlineSec = BigInt(Math.floor(Date.now() / 1000) + parseInt(hours) * 3600);
       const salt = BigInt("0x" + Array.from(crypto.getRandomValues(new Uint8Array(28))).map(b => b.toString(16).padStart(2, "0")).join(""));
 
@@ -65,7 +66,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
         postTxHash: txHash,
       });
 
-      setSuccess({ taskId, txHash });
+      setSuccess({ taskId, txHash, reward: rewardFormatted });
       setReward("10");
       setDescription("");
       setSecret("");
@@ -132,7 +133,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
         <div className="rounded-lg bg-[#818cf8]/[0.15] border border-[#818cf8]/30 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-0 justify-between animate-scale-in">
           <div>
             <span className="text-xs font-medium text-[#818cf8]">Task #{success.taskId} posted</span>
-            <span className="text-[10px] text-muted-foreground ml-2">{reward} USDC locked in escrow</span>
+            <span className="text-[10px] text-muted-foreground ml-2">{success.reward} USDC locked in escrow</span>
           </div>
           <a href={txUrl(success.txHash)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-[#818cf8] hover:text-[#818cf8]/80 font-medium">
             Explorer <ExternalLinkIcon className="w-3 h-3" />
