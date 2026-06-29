@@ -133,7 +133,10 @@ export default function ProofModal({ task, onClose, onSettled, writeContractAsyn
       addLog("Tx sent: " + txHash.slice(0, 18) + "...");
 
       addLog("Waiting for confirmation...");
-      await publicClient.waitForTransactionReceipt({ hash: txHash });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") {
+        throw new Error("Transaction reverted on-chain: " + txHash);
+      }
       addLog("Task settled! USDC released to agent.");
 
       setStage(4);

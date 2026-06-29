@@ -37,10 +37,10 @@ contract Groth16Verifier {
     uint256 constant gammax2 = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
     uint256 constant gammay1 = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
     uint256 constant gammay2 = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
-    uint256 constant deltax1 = 19922688627850234756000746674535418820004230789914445659419177408564809494443;
-    uint256 constant deltax2 = 19484291256457889143614300801759810769804006960216599515494973970371668149481;
-    uint256 constant deltay1 = 15668162689223208698422153510076949362877863588156051075321006490236429833557;
-    uint256 constant deltay2 = 11373421932702401468607557491906365393705125650745267844317111036788523719772;
+    uint256 constant deltax1 = 15773460087044604854423097921737158558504780309474670274398812278215958167727;
+    uint256 constant deltax2 = 13661193174942318696330741676681450726447232820628876292884060411519321631158;
+    uint256 constant deltay1 = 1423072511280823854110784557727356965761866355999250887927959366906204810928;
+    uint256 constant deltay2 = 7294507114829740437020831360590563625490079462991978720661822791210438908942;
 
     
     uint256 constant IC0x = 19717066875806165555105273402911184083119316469075146747496341654736907325779;
@@ -117,11 +117,11 @@ contract Groth16Verifier {
                 mstore(_pPairing, calldataload(pA))
                 mstore(add(_pPairing, 32), mod(sub(q, calldataload(add(pA, 32))), q))
 
-                // B
-                mstore(add(_pPairing, 64), calldataload(pB))
-                mstore(add(_pPairing, 96), calldataload(add(pB, 32)))
-                mstore(add(_pPairing, 128), calldataload(add(pB, 64)))
-                mstore(add(_pPairing, 160), calldataload(add(pB, 96)))
+                // B (swapped Fp2: [c0,c1] from calldata → [c1,c0] for precompile)
+                mstore(add(_pPairing, 64), calldataload(add(pB, 32)))
+                mstore(add(_pPairing, 96), calldataload(pB))
+                mstore(add(_pPairing, 128), calldataload(add(pB, 96)))
+                mstore(add(_pPairing, 160), calldataload(add(pB, 64)))
 
                 // alpha1
                 mstore(add(_pPairing, 192), alphax)

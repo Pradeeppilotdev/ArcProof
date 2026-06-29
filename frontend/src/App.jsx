@@ -102,7 +102,10 @@ export default function ArcProof() {
       const hash = await writeContractAsync({
         address: WR, abi: wrAbi, functionName: "claimTask", args: [BigInt(taskId)],
       });
-      await publicClient.waitForTransactionReceipt({ hash });
+      const claimReceipt = await publicClient.waitForTransactionReceipt({ hash });
+      if (claimReceipt.status !== "success") {
+        throw new Error("Claim transaction reverted on-chain");
+      }
       saveToStorage(taskId, { _claimTxHash: hash });
       loadTasks();
     } catch (e) {
