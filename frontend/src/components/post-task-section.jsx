@@ -42,7 +42,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       }
 
       const txHash = await writeContractAsync({
-        address: WR, abi: wrAbi, functionName: "postTask", args: [rewardParsed, outputHash, deadlineSec, salt],
+        address: WR, abi: wrAbi, functionName: "postTask", args: [rewardParsed, outputHash, deadlineSec, salt, description],
       });
       await publicClient.waitForTransactionReceipt({ hash: txHash });
 

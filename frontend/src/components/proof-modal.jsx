@@ -20,9 +20,9 @@ function Pipeline({ stage }) {
       {steps.map((s, i) => {
         const done = stage > i;
         const active = stage === i;
-        const activeColor = "#162f46";
-        const inactiveColor = "#e2e8f0";
-        const inactiveText = "#7c8a9a";
+        const activeColor = "#818cf8";
+        const inactiveColor = "rgba(255,255,255,0.25)";
+        const inactiveText = "rgba(255,255,255,0.35)";
         return (
           <div key={s.label} className="flex items-start">
             <div className="flex flex-col items-center gap-2" style={{ width: 84 }}>
@@ -75,7 +75,7 @@ export default function ProofModal({ task, onClose, onSettled, writeContractAsyn
   const [rawOutputInput, setRawOutputInput] = useState("");
 
   const needsRawOutput = !task._rawOutput;
-  const challengeDesc = localStorage.getItem(`arcproof-desc-${task.id}`);
+  const challengeDesc = task.description || localStorage.getItem(`arcproof-desc-${task.id}`);
 
   const addLog = (msg) => setLog((l) => [...l, { time: new Date().toLocaleTimeString("en", { hour12: false }), msg }]);
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

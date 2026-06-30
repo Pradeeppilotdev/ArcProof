@@ -32,6 +32,8 @@ async function main() {
   const reward = ethers.parseUnits("10", 6);
   const outputHash = ethers.zeroPadValue(ethers.toBeHex(BigInt(proof.outputHash)), 32);
   const deadline = Math.floor(Date.now() / 1000) + 3600;
+  const salt = BigInt("0x" + Array.from({ length: 28 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, "0")).join(""));
+  const description = "What is the capital of France?";
 
   console.log("ArcProof — On-chain Submission");
   console.log("─".repeat(50));
@@ -62,7 +64,7 @@ async function main() {
 
   // ── Step 3: Post Task ───────────────────────────────────────────────────────
   console.log("\n[2/4] Posting task...");
-  const txPost = await registry.postTask(reward, outputHash, deadline);
+  const txPost = await registry.postTask(reward, outputHash, deadline, salt, description);
   console.log("  Post tx:", txPost.hash);
   const receiptPost = await txPost.wait();
   const taskId = 0;

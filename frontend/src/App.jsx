@@ -12,19 +12,22 @@ import ProofModal from "./components/proof-modal";
 import ErrorBoundary from "./components/error-boundary";
 
 const PROOF_STORAGE_KEY = "arcproof-proofs";
-const DESC_STORAGE_KEY = "arcproof-descriptions";
-const DESC_PREFIX = "arcproof-desc-";
 
 export default function ArcProof() {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
 
+  const [mounted, setMounted] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [provingTask, setProvingTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [claimingIds, setClaimingIds] = useState(new Set());
   const [claimError, setClaimError] = useState(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const loadTasks = useCallback(async () => {
     if (!publicClient) return;
@@ -47,7 +50,6 @@ export default function ArcProof() {
           const fromStorageHash = fromStorage?._outputHashBigInt ? BigInt(fromStorage._outputHashBigInt) : null;
           const fromStorageSalt = fromStorage?._salt ? BigInt(fromStorage._salt) : null;
           const chainOutputHash = t.outputHash || t[3] || "0x0000000000000000000000000000000000000000000000000000000000000000";
-          const desc = localStorage.getItem(DESC_PREFIX + i) || "";
           return {
             id: i,
             client: t.client || t[0],
@@ -56,7 +58,7 @@ export default function ArcProof() {
             outputHash: chainOutputHash,
             deadline: t.deadline ?? t[4] ?? 0n,
             status: STATUS_MAP[t.status ?? t[5]] || "Open",
-            description: desc || existing?.description || (existing?._rawOutput ? "Prove by entering the original secret" : ""),
+            description: t.description || t[7] || existing?.description || "",
             _rawOutput: fromStorageRaw || existing?._rawOutput || null,
             _outputHashBigInt: fromStorageHash || existing?._outputHashBigInt || BigInt(chainOutputHash),
             _salt: (t.salt ?? t[6]) ?? fromStorageSalt ?? existing?._salt ?? 0n,
@@ -88,9 +90,6 @@ export default function ArcProof() {
       _salt: taskData._salt.toString(),
       _postTxHash: taskData.postTxHash,
     });
-    if (taskData.description) {
-      localStorage.setItem(DESC_PREFIX + taskData.id, taskData.description);
-    }
     setTasks(prev => [...prev, taskData]);
     loadTasks();
   };
@@ -130,7 +129,7 @@ export default function ArcProof() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-background text-foreground antialiased">
+      <div className={`min-h-screen bg-background text-foreground antialiased transition-opacity duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
         <Header />
         <main className="max-w-[980px] mx-auto px-6 py-10 pb-20">
           <div className="space-y-6">
