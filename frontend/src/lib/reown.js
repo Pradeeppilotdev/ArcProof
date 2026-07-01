@@ -5,7 +5,7 @@ import { arcTestnet } from "./wagmi";
 const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || "YOUR_PROJECT_ID_FROM_REOWN_CLOUD";
 
 const metadata = {
-  name: "ArcProof",
+  name: "ArcZK",
   description: "ZK-verified USDC settlement on Arc testnet",
   url: window.location.origin,
   icons: ["/favicon.ico"],

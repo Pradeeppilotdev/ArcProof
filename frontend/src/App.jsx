@@ -13,7 +13,7 @@ import ErrorBoundary from "./components/error-boundary";
 
 const PROOF_STORAGE_KEY = "arcproof-proofs";
 
-export default function ArcProof() {
+export default function ArcZK() {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();

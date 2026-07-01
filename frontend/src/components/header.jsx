@@ -16,7 +16,7 @@ export default function Header() {
           <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-primary text-primary-foreground flex items-center justify-center shrink-0">
             <LogoIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
-          <span className="text-sm font-semibold tracking-tight text-primary whitespace-nowrap">ArcProof</span>
+          <span className="text-sm font-semibold tracking-tight text-primary whitespace-nowrap">ArcZK</span>
           <span className="hidden sm:inline-flex text-[9px] text-muted-foreground font-mono border border-border rounded-full px-2 py-0.5 leading-none">Arc Testnet</span>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
