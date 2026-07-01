@@ -1,6 +1,8 @@
 # ArcZK
 
 > Lock USDC behind a secret answer. Prove knowledge via ZK to claim it.
+> <img width="1920" height="944" alt="image" src="https://github.com/user-attachments/assets/bc7dca02-4272-454f-bbef-287363d4cc55" />
+
 
 **Live demo:** `https://arczk.vercel.app`  
 **Arc Testnet Explorer:** https://testnet.arcscan.app
