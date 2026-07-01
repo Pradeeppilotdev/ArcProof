@@ -1,81 +1,57 @@
-# ArcProof
+# ArcZK
 
-> ZK-verified task completion payments on Arc — USDC only settles when work is cryptographically proven.
+> Lock USDC behind a secret answer. Prove knowledge via ZK to claim it.
 
-**Live demo:** `https://arcproof.vercel.app` *(deploy after testnet)*  
-**Arc Testnet Explorer:** *(add contract links after deploy)*
+**Live demo:** `https://arczk.vercel.app`  
+**Arc Testnet Explorer:** https://testnet.arcscan.app
 
 ---
 
-## The Problem
-
-Every agent payment system built on Arc today releases USDC based on **trust** — human approval, time locks, or policy rules. There's no cryptographic proof that an agent actually completed the work correctly before funds settle.
-
-## The Solution
-
-ArcProof introduces a **ZK proof gate** at the settlement layer:
+## How It Works
 
 ```
-Client locks USDC → Agent does work → Agent generates ZK proof → 
-ProofVerifier checks proof on-chain → USDC releases atomically
+Poster locks USDC + Poseidon hash of a secret → Claimer guesses the secret →
+Claimer generates Groth16 proof → On-chain verification → USDC released
 ```
 
-No human in the loop. No timers. Proof or nothing.
+No judges, no disputes. If you know the secret answer, you can prove it and take the reward.
 
 ---
 
 ## Architecture
 
 ```
-WorkRegistry.sol          — Task escrow + lifecycle (Open → Proving → Settled)
-ProofVerifier.sol         — Groth16 ZK proof verification (BN128 pairing)
+WorkRegistry.sol          — Task lifecycle (Open → Proving → Settled), stores salt + description on-chain
+ProofVerifier.sol         — Delegates to Groth16Verifier via external call
 SettlementGate.sol        — Orchestrates verify + release (only entry point)
+Groth16Verifier.sol       — Auto-generated from snarkjs, BN128 pairing
 
 circuits/
-  task_completion.circom  — Poseidon hash pre-image proof circuit
-
-scripts/
-  deploy.js               — Arc testnet deployment
-  generate-proof.js       — Off-chain proof generation (snarkjs)
+  task_completion.circom  — Poseidon hash pre-image proof (324 constraints, 3 public inputs)
 ```
 
-### Settlement Flow
+### Proof Pipeline
 
 ```
-agent calls SettlementGate.submitProof(taskId, outputHash, proof, publicSignals)
-  ↓
-ProofVerifier.verify() — checks Groth16 pairing, public input binding
-  ↓ (reverts with InvalidProof if bad)
-WorkRegistry.settleTask() — transfers USDC from escrow to agent
-  ↓
-TaskSettled event emitted on Arc
+claimTask() → sets agent, status → Proving
+generate-proof.js / browser snarkjs → Groth16 fullProve()
+submitProof() → SettlementGate → ProofVerifier → Groth16Verifier → settleTask()
 ```
 
-### Circuit: What Gets Proven
+---
 
-The Circom circuit proves (without revealing the output):
+## Contracts (Arc Testnet)
 
-- Agent knows the **pre-image** of `outputHash` (Poseidon hash)
-- The proof is bound to a specific **taskId** (no replay across tasks)
-- The proof is bound to a specific **agentAddr** (no proof stealing)
-
-Public inputs (verified on-chain): `[taskId, outputHash, agentAddr]`  
-Private inputs (never leave agent): `[rawOutput[4], salt]`
+| Contract | Address |
+|---|---|
+| Groth16Verifier | `0x8E7a48ab862D35098AC20E048A350311C739ac27` |
+| ProofVerifier | `0x6E17Dcb36a9225746C6E04acd6dCfA43Ac6f2F97` |
+| SettlementGate | `0x1E0583fF65171D29D6DB0b43Da4A09bb5CA0aF99` |
+| WorkRegistry | `0x3C4D771007a6f1a55e21303D996B9E02141A61e7` |
 
 ---
 
 ## Setup
-
-### Prerequisites
-
-```bash
-node >= 18
-npm >= 9
-circom 2.1.6      # cargo install circom
-snarkjs           # npm i -g snarkjs
-```
-
-### Install
 
 ```bash
 git clone https://github.com/Pradeeppilotdev/arcproof
@@ -90,88 +66,46 @@ cd frontend && npm install && cd ..
 cp .env.example .env
 # Fill in:
 #   PRIVATE_KEY=your_testnet_wallet_private_key
-#   ARC_TESTNET_RPC=https://rpc.arc.io/testnet   (from docs.arc.io)
-#   ARC_CHAIN_ID=<chain id from docs>
+#   ARC_TESTNET_RPC=https://rpc.testnet.arc.network
 ```
 
 ---
 
 ## Build & Deploy
 
-### 1. Compile contracts
-
 ```bash
-npm run compile
+npm run compile        # Compile contracts
+npm run deploy:testnet # Deploy to Arc Testnet
+cd frontend && npm run dev  # http://localhost:5173
 ```
 
-### 2. Compile the ZK circuit
+### ZK Circuit
 
 ```bash
-# Download trusted setup (powers of tau)
-mkdir ptau
+mkdir -p ptau
 curl -o ptau/powersOfTau28_hez_final_12.ptau \
   https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_12.ptau
-
-# Compile circuit → wasm + r1cs
-npm run circuit:compile
-
-# Groth16 setup
-npm run circuit:setup
-
-# Contribute randomness (required for Groth16)
-npm run circuit:contribute
-
-# Export Solidity verifier
-npm run circuit:export
-# → generates contracts/Groth16Verifier.sol
-# Replace ProofVerifier._groth16Verify() with the exported logic
-```
-
-### 3. Deploy to Arc Testnet
-
-```bash
-npm run deploy:testnet
-# Outputs contract addresses → writes to frontend/src/contracts.json
-```
-
-### 4. Run frontend
-
-```bash
-npm run dev
-# → http://localhost:5173
+npm run circuit:compile && npm run circuit:setup
+npm run circuit:contribute && npm run circuit:export
 ```
 
 ---
 
-## Generate a Proof (CLI)
+## Tech Stack
 
-```bash
-AGENT_ADDRESS=0xYourAddress \
-  node scripts/generate-proof.js 0 "task output text here" "random_salt_123"
-
-# Outputs: proof_task_0.json
-# Contains: proof.a, proof.b, proof.c, publicSignals
-# Use these to call SettlementGate.submitProof() directly or via the UI
-```
-
----
-
-## Why Arc?
-
-- **USDC as gas** — no ETH needed, pure stablecoin economy
-- **Agent lifecycle events** — Arc tracks agent activity at protocol level
-- **Built-in CCTP** — crosschain USDC for multi-chain agent coordination
-- **Sub-cent fees** — ZK proof verification is affordable at Arc's fee level
-- **EVM compatible** — BN128 precompile (0x08) works natively for Groth16
+- **Frontend:** Vite + React + wagmi + viem + Reown (AppKit)
+- **ZK:** snarkjs + circomlibjs (browser Groth16 proving)
+- **Chain:** Arc Testnet (chain 5042002)
+- **Styling:** Tailwind v4, sunset glassmorphism
 
 ---
 
 ## Roadmap
 
-- [ ] Deploy to Arc Testnet + live demo
-- [ ] Replace mock ProofVerifier with snarkjs-exported Groth16Verifier
+- [x] Deploy to Arc Testnet
+- [x] Replace mock ProofVerifier with real Groth16Verifier
+- [x] On-chain salt storage for proving agents
+- [x] On-chain challenge descriptions
 - [ ] Agent reputation score (on-chain track record of verified completions)
-- [ ] Multi-agent task coordination (agent A subcontracts to agent B, ZK-settled)
-- [ ] Farcaster Frame for task posting + proof status
-
----
+- [ ] Multi-agent task coordination
+- [ ] Farcaster Frame for task posting
