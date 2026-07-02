@@ -120,12 +120,13 @@ body {
 
 
 
-body::before {
-  content: '';
+#bg-gradient {
   position: fixed;
   inset: 0;
   z-index: -1;
   background: linear-gradient(180deg, #1a1a3e 0%, #2d1b4e 25%, #463c7b 50%, #6b3a5a 72%, #c47b5a 100%);
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
 }
 
 .font-mono {
