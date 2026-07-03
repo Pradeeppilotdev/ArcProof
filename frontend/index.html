@@ -5,10 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ArcZK</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <style>html{background:#1a1a3e}</style>
+    <style>
+      html { background: #c47b5a; }
+      #bg-gradient {
+        position: fixed;
+        inset: 0;
+        z-index: -3;
+        background: linear-gradient(180deg, #1a1a3e 0%, #2d1b4e 25%, #463c7b 50%, #6b3a5a 72%, #c47b5a 100%);
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: transform;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      }
+      #glass-blur {
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        pointer-events: none;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+      }
+    </style>
   </head>
   <body>
     <div id="bg-gradient"></div>
+    <div id="glass-blur"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

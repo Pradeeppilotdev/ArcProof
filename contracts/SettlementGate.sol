@@ -48,15 +48,15 @@ contract SettlementGate {
 
     /**
      * @notice Submit a ZK proof for task completion. If valid, USDC settles immediately.
+     *         Uses on-chain committed outputHash — caller-supplied hash is ignored.
      *
      * @param taskId        Task ID from WorkRegistry
-     * @param outputHash    Hash of the actual work output
      * @param proof         Groth16 proof (a, b, c)
      * @param publicSignals Public circuit inputs [taskId, outputHash, agentAddr]
      */
     function submitProof(
         uint256 taskId,
-        bytes32 outputHash,
+        bytes32,
         ProofVerifier.Proof calldata proof,
         uint256[3] calldata publicSignals
     ) external {
@@ -72,21 +72,19 @@ contract SettlementGate {
         if (block.timestamp >= task.deadline) revert DeadlineExpired();
 
         // ── ZK Proof Gate ─────────────────────────────────────────────────────
-        // ProofVerifier will revert with InvalidProof() if proof is bad.
-        // No try/catch — we want the whole tx to revert on bad proof.
+        // Use the on-chain committed outputHash — NEVER trust the caller's.
         verifier.verify(
             taskId,
-            outputHash,
+            task.outputHash,
             msg.sender,
             proof,
             publicSignals
         );
 
         // ── Release Escrow ────────────────────────────────────────────────────
-        // Only reachable if proof verified. USDC goes to agent atomically.
         registry.settleTask(taskId);
 
-        emit SettlementTriggered(taskId, msg.sender, outputHash, task.reward);
+        emit SettlementTriggered(taskId, msg.sender, task.outputHash, task.reward);
     }
 
     // ─── Views ────────────────────────────────────────────────────────────────

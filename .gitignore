@@ -26,3 +26,4 @@ proof_*.json
 *.swo
 *~
 .DS_Store
+frontend/dist/
