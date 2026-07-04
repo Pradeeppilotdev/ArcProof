@@ -27,7 +27,7 @@ export default function Header() {
             </Button>
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-[11px] sm:text-xs text-muted-foreground font-mono">{shorten(address)}</span>
+              <span className="text-[11px] sm:text-xs text-muted-foreground font-mono cursor-pointer hover:text-white transition-colors" onClick={() => navigator.clipboard.writeText(address)} title={address}>{shorten(address)}</span>
               <Button size="sm" onClick={disconnect} className="glass-card text-xs sm:text-sm">
                 Disconnect
               </Button>
