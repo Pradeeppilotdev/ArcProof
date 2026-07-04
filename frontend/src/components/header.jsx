@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAccount, useDisconnect } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { Button } from "./ui/button";
@@ -8,6 +9,7 @@ export default function Header() {
   const { address, isConnected } = useAccount();
   const { open } = useAppKit();
   const { disconnect } = useDisconnect();
+  const [copied, setCopied] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-transparent backdrop-blur-sm">
@@ -27,7 +29,9 @@ export default function Header() {
             </Button>
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-[11px] sm:text-xs text-muted-foreground font-mono cursor-pointer hover:text-white transition-colors" onClick={() => navigator.clipboard.writeText(address)} title={address}>{shorten(address)}</span>
+              <span className={`text-[11px] sm:text-xs cursor-pointer font-mono transition-colors ${copied ? 'text-[#818cf8]' : 'text-muted-foreground hover:text-white'}`} onClick={() => { navigator.clipboard.writeText(address); setCopied(true); setTimeout(() => setCopied(false), 1500); }} title={address}>
+                {copied ? "Copied!" : shorten(address)}
+              </span>
               <Button size="sm" onClick={disconnect} className="glass-card text-xs sm:text-sm">
                 Disconnect
               </Button>
