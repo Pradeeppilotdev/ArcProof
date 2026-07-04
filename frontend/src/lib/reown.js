@@ -24,6 +24,7 @@ createAppKit({
   networks,
   projectId,
   metadata,
+  defaultNetwork: arcTestnet,
   features: { analytics: false },
   customRpcUrls: {
     "eip155:5042002": [{ url: "https://rpc.testnet.arc.network" }],

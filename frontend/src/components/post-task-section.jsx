@@ -4,7 +4,6 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { DollarIcon, ZapIcon, ClockIcon, ExternalLinkIcon } from "./icons";
 import { WR, USDC, wrAbi, erc20Abi } from "../lib/abis";
-import { arcTestnet } from "../lib/wagmi";
 import { computeOutputHash, chunkOutput } from "../lib/poseidon";
 import { toBytes32 } from "../lib/utils";
 import { txUrl } from "../lib/explorer";
@@ -42,13 +41,13 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       });
       if (allowance < rewardParsed) {
         const approveHash = await writeContractAsync({
-          address: USDC, abi: erc20Abi, functionName: "approve", args: [WR, rewardParsed], chain: arcTestnet,
+          address: USDC, abi: erc20Abi, functionName: "approve", args: [WR, rewardParsed],
         });
         await publicClient.waitForTransactionReceipt({ hash: approveHash });
       }
 
       const txHash = await writeContractAsync({
-        address: WR, abi: wrAbi, functionName: "postTask", args: [rewardParsed, outputHash, deadlineSec, salt, description], chain: arcTestnet,
+        address: WR, abi: wrAbi, functionName: "postTask", args: [rewardParsed, outputHash, deadlineSec, salt, description],
       });
       await publicClient.waitForTransactionReceipt({ hash: txHash });
 
@@ -79,7 +78,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       setHours("2");
     } catch (err) {
       const msg = err?.shortMessage || err?.cause?.message || err?.message || "";
-      setError(msg.match(/denied|rejected|cancelled|cancel/i) ? "Cancelled" : "Posting failed");
+      setError(msg.match(/denied|rejected|cancelled|cancel/i) ? "Cancelled" : msg || "Posting failed");
     }
     setPosting(false);
   }
