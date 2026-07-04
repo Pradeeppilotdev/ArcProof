@@ -95,10 +95,6 @@ body::before {
   z-index: 0;
 }
 
-#bg-gradient,
-#glass-blur {
-  display: none !important;
-}
 
 .glass-edge {
   position: relative;

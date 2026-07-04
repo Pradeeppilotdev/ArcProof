@@ -50,12 +50,7 @@ function TaskRow({ task, address, onClaim, onProve, claiming, index }) {
               Prove
             </Button>
           )}
-          {task.status === "Settled" && (
-            <span className="flex items-center gap-1 text-xs text-[#818cf8] font-medium">
-              <CheckCircleIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">Settled</span>
-            </span>
-          )}
+          {task.status === "Settled" && <CheckCircleIcon className="w-4 h-4 text-[#818cf8]" />}
         </div>
       </div>
 
