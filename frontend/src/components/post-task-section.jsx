@@ -134,7 +134,9 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
         </div>
       </div>
 
-      {error && <div className="text-xs text-destructive mb-3">{error}</div>}
+      <div className={`transition-all duration-300 ${error ? 'opacity-100 max-h-10 mb-3' : 'opacity-0 max-h-0 mb-0 overflow-hidden'}`}>
+        <div className="text-xs text-destructive">{error || ""}</div>
+      </div>
 
       {success && (
         <div className="rounded-lg bg-[#818cf8]/[0.15] border border-[#818cf8]/30 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-0 justify-between animate-scale-in">

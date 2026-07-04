@@ -92,9 +92,11 @@ export default function TaskRegistry({ tasks, loading, address, claimingIds, cla
           <p className="text-[11px] text-muted-foreground mt-0.5">{open.length} available to claim</p>
         </div>
       </div>
-      {claimError && (
-        <div className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-2.5 mb-3 animate-scale-in">{claimError}</div>
-      )}
+      <div className={`transition-all duration-300 ${claimError ? 'opacity-100 max-h-16 mb-3' : 'opacity-0 max-h-0 mb-0 overflow-hidden'}`}>
+        {claimError && (
+          <div className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-2.5">{claimError}</div>
+        )}
+      </div>
       {loading ? (
         <div className="rounded-lg border border-border bg-card p-8 sm:p-10 text-center">
           <div className="text-sm text-muted-foreground">Loading tasks from chain...</div>
