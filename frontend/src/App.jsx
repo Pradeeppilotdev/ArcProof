@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAccount, useWriteContract, usePublicClient } from "wagmi";
 import { WR, STATUS_MAP, wrAbi } from "./lib/abis";
+import { arcTestnet } from "./lib/wagmi";
 import Header from "./components/header";
 import Hero from "./components/hero";
 import Stats from "./components/stats";
@@ -99,7 +100,7 @@ export default function ArcZK() {
     setClaimingIds(prev => new Set(prev).add(taskId));
     try {
       const hash = await writeContractAsync({
-        address: WR, abi: wrAbi, functionName: "claimTask", args: [BigInt(taskId)],
+        address: WR, abi: wrAbi, functionName: "claimTask", args: [BigInt(taskId)], chain: arcTestnet,
       });
       const claimReceipt = await publicClient.waitForTransactionReceipt({ hash });
       if (claimReceipt.status !== "success") {
@@ -108,7 +109,8 @@ export default function ArcZK() {
       saveToStorage(taskId, { _claimTxHash: hash });
       loadTasks();
     } catch (e) {
-      setClaimError(e?.reason || e?.shortMessage || e.message || "Claim failed");
+      const msg = e?.shortMessage || e?.cause?.message || e?.message || "";
+      setClaimError(msg.match(/denied|rejected|cancelled|cancel/i) ? "Request cancelled" : "Claim failed");
       setTimeout(() => setClaimError(null), 5000);
     }
     setClaimingIds(prev => { const n = new Set(prev); n.delete(taskId); return n; });

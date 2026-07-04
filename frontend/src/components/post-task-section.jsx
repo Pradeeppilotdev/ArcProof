@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { DollarIcon, ZapIcon, ClockIcon, ExternalLinkIcon } from "./icons";
 import { WR, USDC, wrAbi, erc20Abi } from "../lib/abis";
+import { arcTestnet } from "../lib/wagmi";
 import { computeOutputHash, chunkOutput } from "../lib/poseidon";
 import { toBytes32 } from "../lib/utils";
 import { txUrl } from "../lib/explorer";
@@ -16,9 +17,14 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [shake, setShake] = useState("");
 
   async function handle() {
-    if (!secret || !reward || !description || !writeContractAsync || !address) return;
+    if (!secret || !reward || !description || !writeContractAsync || !address) {
+      if (!secret) { setShake("secret"); setTimeout(() => setShake(""), 500); }
+      if (!description) { setShake("desc"); setTimeout(() => setShake(""), 500); }
+      return;
+    }
     setPosting(true);
     setError(null);
     setSuccess(null);
@@ -36,13 +42,13 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       });
       if (allowance < rewardParsed) {
         const approveHash = await writeContractAsync({
-          address: USDC, abi: erc20Abi, functionName: "approve", args: [WR, rewardParsed],
+          address: USDC, abi: erc20Abi, functionName: "approve", args: [WR, rewardParsed], chain: arcTestnet,
         });
         await publicClient.waitForTransactionReceipt({ hash: approveHash });
       }
 
       const txHash = await writeContractAsync({
-        address: WR, abi: wrAbi, functionName: "postTask", args: [rewardParsed, outputHash, deadlineSec, salt, description],
+        address: WR, abi: wrAbi, functionName: "postTask", args: [rewardParsed, outputHash, deadlineSec, salt, description], chain: arcTestnet,
       });
       await publicClient.waitForTransactionReceipt({ hash: txHash });
 
@@ -72,7 +78,8 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       setSecret("");
       setHours("2");
     } catch (err) {
-      setError(err.message || "Posting failed");
+      const msg = err?.shortMessage || err?.cause?.message || err?.message || "";
+      setError(msg.match(/denied|rejected|cancelled|cancel/i) ? "Cancelled" : "Posting failed");
     }
     setPosting(false);
   }
@@ -89,7 +96,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
           <ZapIcon className="w-3 h-3" />
           Challenge Description <span className="text-white/40 normal-case font-normal">(visible to everyone)</span>
         </div>
-        <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. What is the capital of France?" className="font-mono flex-1" />
+        <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. What is the capital of France?" className={`font-mono flex-1 ${shake === "desc" ? "shake" : ""}`} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
@@ -120,7 +127,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
           Secret Answer <span className="text-white/40 normal-case font-normal">(hashed with ZK — nobody sees this)</span>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <Input value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="e.g. Paris" className="font-mono flex-1" />
+          <Input value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="e.g. Paris" className={`font-mono flex-1 ${shake === "secret" ? "shake" : ""}`} />
           {secret && (
             <span className="text-[10px] text-muted-foreground self-start sm:self-center shrink-0">Hashed via Poseidon</span>
           )}
