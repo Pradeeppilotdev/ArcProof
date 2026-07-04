@@ -78,18 +78,20 @@ function Stepper({ task }) {
 function TaskCard({ task }) {
   return (
     <div className="rounded-lg border border-border bg-card px-3 sm:px-4 py-3 sm:py-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md animate-fade-up">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-2">
-        <span className="text-xs text-muted-foreground font-mono">#{task.id}</span>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <span className="text-xs text-muted-foreground font-mono">#{task.id}</span>
+          {task.description && (
+            <div className="text-sm text-white/90 mt-1 leading-snug">{task.description}</div>
+          )}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-mono text-white/40 mt-1">
+            <span className="font-semibold tabular-nums text-primary">{formatUSDC(task.reward)} USDC</span>
+            {task._rawOutput && (
+              <span className="text-white/30 text-[10px]">secret stored locally</span>
+            )}
+          </div>
+        </div>
         <Stepper task={task} />
-      </div>
-      {task.description && (
-        <div className="text-sm text-white/90 mb-1.5 leading-snug">{task.description}</div>
-      )}
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-mono text-white/40">
-        <span className="font-semibold tabular-nums text-primary">{formatUSDC(task.reward)} USDC</span>
-        {task._rawOutput && (
-          <span className="text-white/30 text-[10px]">secret stored locally</span>
-        )}
       </div>
     </div>
   );
