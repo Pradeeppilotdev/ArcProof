@@ -79,6 +79,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
     } catch (err) {
       const msg = err?.shortMessage || err?.cause?.message || err?.message || "";
       setError(msg.match(/denied|rejected|cancelled|cancel/i) ? "Cancelled" : msg || "Posting failed");
+      setTimeout(() => setError(null), 2500);
     }
     setPosting(false);
   }
