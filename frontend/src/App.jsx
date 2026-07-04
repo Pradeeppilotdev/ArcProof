@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, useWriteContract, usePublicClient } from "wagmi";
+import { useAccount, useSwitchChain, useWriteContract, usePublicClient } from "wagmi";
 import { WR, STATUS_MAP, wrAbi } from "./lib/abis";
 import Header from "./components/header";
 import Hero from "./components/hero";
@@ -12,10 +12,12 @@ import ProofModal from "./components/proof-modal";
 import ErrorBoundary from "./components/error-boundary";
 
 const PROOF_STORAGE_KEY = "arcproof-proofs";
+const ARC_CHAIN_ID = 5042002;
 
 export default function ArcZK() {
-  const { address } = useAccount();
+  const { address, chainId } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { switchChainAsync } = useSwitchChain();
   const publicClient = usePublicClient();
 
   const [mounted, setMounted] = useState(false);
@@ -132,6 +134,16 @@ export default function ArcZK() {
     <ErrorBoundary>
       <div className={`min-h-screen bg-background text-foreground antialiased transition-opacity duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
         <Header />
+        {address && chainId && chainId !== ARC_CHAIN_ID && (
+          <div className="max-w-[980px] mx-auto px-6 pt-4">
+            <div className="bg-[#e8799a]/20 border border-[#e8799a]/40 rounded-xl px-4 py-3 flex items-center justify-between gap-3 animate-fade-in">
+              <span className="text-xs text-[#e8799a] font-medium">Wrong network — switch to Arc Testnet</span>
+              <button onClick={() => switchChainAsync({ chainId: ARC_CHAIN_ID })} className="text-xs font-medium text-white bg-[#e8799a]/30 hover:bg-[#e8799a]/50 px-3 py-1.5 rounded-lg transition-colors">
+                Switch
+              </button>
+            </div>
+          </div>
+        )}
         <main className="max-w-[980px] mx-auto px-6 py-10 pb-20">
           <div className="space-y-6">
             <Hero />
