@@ -1,3 +1,4 @@
+import { Button } from "./ui/button";
 import { ExternalLinkIcon } from "./icons";
 import { formatUSDC, shorten } from "../lib/utils";
 import { txUrl } from "../lib/explorer";
@@ -75,7 +76,8 @@ function Stepper({ task }) {
   );
 }
 
-function TaskCard({ task }) {
+function TaskCard({ task, onRefund, refundingIds }) {
+  const expired = Number(task.deadline) * 1000 < Date.now();
   return (
     <div className="rounded-lg border border-border bg-card px-3 sm:px-4 py-3 sm:py-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md animate-fade-up">
       <div className="flex items-center gap-3">
@@ -91,13 +93,25 @@ function TaskCard({ task }) {
             )}
           </div>
         </div>
-        <Stepper task={task} />
+        {task.status === "Open" && expired ? (
+          <Button
+            disabled={refundingIds?.has(task.id)}
+            onClick={() => onRefund?.(task.id)}
+            className="glass-card rounded-full text-[10px] px-3 py-1 min-w-[70px] justify-center disabled:opacity-50"
+          >
+            {refundingIds?.has(task.id) ? "..." : "Refund"}
+          </Button>
+        ) : task.status === "Slashed" ? (
+          <span className="text-[10px] font-medium text-[#9a7b4f] bg-[#9a7b4f]/10 border border-[#9a7b4f]/30 rounded-full px-2.5 py-1">Refunded</span>
+        ) : (
+          <Stepper task={task} />
+        )}
       </div>
     </div>
   );
 }
 
-export default function MyTasks({ tasks, address }) {
+export default function MyTasks({ tasks, address, onRefund, refundingIds }) {
   if (!address) return null;
   const mine = tasks.filter(t => t.client?.toLowerCase() === address.toLowerCase());
 
@@ -116,7 +130,7 @@ export default function MyTasks({ tasks, address }) {
       ) : (
         <div className="space-y-2">
           {mine.map((t) => (
-            <TaskCard key={t.id} task={t} />
+            <TaskCard key={t.id} task={t} onRefund={onRefund} refundingIds={refundingIds} />
           ))}
         </div>
       )}

@@ -16,7 +16,7 @@ function Pipeline({ stage }) {
   ];
 
   return (
-    <div className="flex items-start justify-center py-4">
+    <div className="flex items-start justify-center py-4 px-2 sm:px-0">
       {steps.map((s, i) => {
         const done = stage > i;
         const active = stage === i;
@@ -24,38 +24,38 @@ function Pipeline({ stage }) {
         const inactiveColor = "rgba(255,255,255,0.25)";
         const inactiveText = "rgba(255,255,255,0.35)";
         return (
-          <div key={s.label} className="flex items-start">
-            <div className="flex flex-col items-center gap-2" style={{ width: 84 }}>
+          <div key={s.label} className="flex items-start flex-1 min-w-0">
+            <div className="flex flex-col items-center gap-1.5 sm:gap-2 min-w-0">
               <div
-                className="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-500"
+                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-500 shrink-0"
                 style={{
                   borderColor: done || active ? activeColor : inactiveColor,
                   background: done ? activeColor : active ? activeColor : "transparent",
                 }}
               >
                 {done ? (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="sm:w-3 sm:h-3">
                     <path d="M2.5 6l2.5 2.5 4.5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 ) : active ? (
-                  <div className="w-2 h-2 rounded-full bg-white" />
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white" />
                 ) : (
-                  <div className="w-2 h-2 rounded-full" style={{ background: inactiveText }} />
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" style={{ background: inactiveText }} />
                 )}
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-0 px-0.5">
                 <div
-                  className="text-[11px] font-semibold transition-colors duration-500"
+                  className="text-[9px] sm:text-[11px] font-semibold transition-colors duration-500 leading-tight truncate"
                   style={{ color: done || active ? activeColor : inactiveText }}
                 >
                   {s.label}
                 </div>
-                <div className="text-[9px] text-muted-foreground font-mono mt-0.5">{s.sub}</div>
+                <div className="text-[7px] sm:text-[9px] text-muted-foreground font-mono mt-0.5 truncate">{s.sub}</div>
               </div>
             </div>
             {i < steps.length - 1 && (
               <div
-                className="w-9 h-0.5 mt-4 transition-all duration-600"
+                className="flex-1 h-0.5 mt-3 sm:mt-4 mx-1 sm:mx-2 transition-all duration-600"
                 style={{ background: done ? activeColor : inactiveColor }}
               />
             )}
@@ -188,7 +188,7 @@ export default function ProofModal({ task, onClose, onSettled, writeContractAsyn
           <Pipeline stage={stage} />
         </div>
         <div className="px-6 pb-4">
-          <div className="backdrop-blur-[8px] rounded-xl p-3 min-h-[110px] max-h-[150px] overflow-y-auto font-mono text-[11px] space-y-1.5 border border-white/20" style={{ background: 'rgba(0,0,0,0.15)' }}>
+          <div className="backdrop-blur-[8px] rounded-xl p-3 min-h-[110px] max-h-[150px] overflow-y-auto overscroll-contain font-mono text-[11px] space-y-1.5 border border-white/20" style={{ background: 'rgba(0,0,0,0.15)' }}>
             {log.length === 0 && <span className="text-muted-foreground">Waiting for proof submission...</span>}
             {log.map((l, i) => (
               <div key={i} className="flex gap-2.5">

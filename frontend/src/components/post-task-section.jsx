@@ -12,7 +12,8 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
   const [reward, setReward] = useState("10");
   const [description, setDescription] = useState("");
   const [secret, setSecret] = useState("");
-  const [hours, setHours] = useState("2");
+  const [duration, setDuration] = useState("2");
+  const [unit, setUnit] = useState("hours");
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -30,7 +31,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
     try {
       const rewardParsed = parseUnits(reward, 6);
       const rewardFormatted = reward;
-      const deadlineSec = BigInt(Math.floor(Date.now() / 1000) + parseInt(hours) * 3600);
+      const deadlineSec = BigInt(Math.floor(Date.now() / 1000) + parseInt(duration) * (unit === "hours" ? 3600 : 60));
       const salt = BigInt("0x" + Array.from(crypto.getRandomValues(new Uint8Array(28))).map(b => b.toString(16).padStart(2, "0")).join(""));
 
       const outputHashBigInt = await computeOutputHash(secret, salt);
@@ -75,7 +76,8 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       setReward("10");
       setDescription("");
       setSecret("");
-      setHours("2");
+      setDuration("2");
+      setUnit("hours");
     } catch (err) {
       const msg = err?.shortMessage || err?.cause?.message || err?.message || "";
       setError(msg.match(/denied|rejected|cancelled|cancel/i) ? "Cancelled" : msg || "Posting failed");
@@ -110,9 +112,12 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
         <div>
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1.5">
             <ClockIcon className="w-3 h-3" />
-            Deadline (hours)
+            Deadline
           </div>
-          <Input value={hours} onChange={(e) => setHours(e.target.value)} placeholder="2" className="font-mono" />
+          <div className="flex gap-1.5">
+            <Input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="2" className="font-mono flex-1" />
+            <button onClick={() => setUnit(unit === "hours" ? "mins" : "hours")} className="text-[10px] font-mono text-white/60 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg px-2.5 py-1 transition-colors cursor-pointer shrink-0">{unit === "hours" ? "hours" : "mins"}</button>
+          </div>
         </div>
         <div className="flex items-end">
           <Button onClick={handle} disabled={posting} className="w-full justify-center gap-2 h-9">

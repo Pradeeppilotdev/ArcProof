@@ -38,10 +38,12 @@ contract WorkRegistry {
     event TaskClaimed(uint256 indexed taskId, address indexed agent);
     event TaskSettled(uint256 indexed taskId, address indexed agent, uint256 reward);
     event TaskSlashed(uint256 indexed taskId, address indexed client, uint256 refund);
+    event TaskRefunded(uint256 indexed taskId, address indexed client, uint256 refund);
 
     // ─── Errors ───────────────────────────────────────────────────────────────
 
     error NotAgent();
+    error NotClient();
     error NotSettlementGate();
     error TaskNotOpen();
     error TaskNotProving();
@@ -149,6 +151,25 @@ contract WorkRegistry {
         if (!ok) revert TransferFailed();
 
         emit TaskSlashed(taskId, client, refund);
+    }
+
+    /**
+     * @notice Client refunds an expired task that was never claimed.
+     *         Only the task poster can call this, and only on Open tasks past deadline.
+     */
+    function refundExpiredTask(uint256 taskId) external {
+        Task storage t = tasks[taskId];
+        if (msg.sender != t.client) revert NotClient();
+        if (t.status != TaskStatus.Open) revert TaskNotOpen();
+        if (block.timestamp < t.deadline) revert DeadlineNotPassed();
+
+        t.status = TaskStatus.Slashed;
+        uint256 refund = t.reward;
+
+        bool ok = usdc.transfer(msg.sender, refund);
+        if (!ok) revert TransferFailed();
+
+        emit TaskRefunded(taskId, msg.sender, refund);
     }
 
     // ─── Views ────────────────────────────────────────────────────────────────

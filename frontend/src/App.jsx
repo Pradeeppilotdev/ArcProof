@@ -6,6 +6,7 @@ import Hero from "./components/hero";
 import Stats from "./components/stats";
 import PostTaskSection from "./components/post-task-section";
 import MyTasks from "./components/my-tasks";
+import MyClaims from "./components/my-claims";
 import TaskRegistry from "./components/task-registry";
 import HowItWorks from "./components/how-it-works";
 import ProofModal from "./components/proof-modal";
@@ -26,6 +27,8 @@ export default function ArcZK() {
   const [loading, setLoading] = useState(true);
   const [claimingIds, setClaimingIds] = useState(new Set());
   const [claimError, setClaimError] = useState(null);
+  const [slashingIds, setSlashingIds] = useState(new Set());
+  const [refundingIds, setRefundingIds] = useState(new Set());
 
   useEffect(() => {
     setMounted(true);
@@ -126,6 +129,38 @@ export default function ArcZK() {
     loadTasks();
   };
 
+  const handleSlash = async (taskId) => {
+    if (!writeContractAsync || !publicClient) return;
+    setSlashingIds(prev => new Set(prev).add(taskId));
+    try {
+      const hash = await writeContractAsync({
+        address: WR, abi: wrAbi, functionName: "slashTask", args: [BigInt(taskId)],
+      });
+      await publicClient.waitForTransactionReceipt({ hash });
+      loadTasks();
+    } catch (e) {
+      const msg = e?.shortMessage || e?.cause?.message || e?.message || "";
+      console.error("Slash failed:", msg);
+    }
+    setSlashingIds(prev => { const n = new Set(prev); n.delete(taskId); return n; });
+  };
+
+  const handleRefund = async (taskId) => {
+    if (!writeContractAsync || !publicClient) return;
+    setRefundingIds(prev => new Set(prev).add(taskId));
+    try {
+      const hash = await writeContractAsync({
+        address: WR, abi: wrAbi, functionName: "refundExpiredTask", args: [BigInt(taskId)],
+      });
+      await publicClient.waitForTransactionReceipt({ hash });
+      loadTasks();
+    } catch (e) {
+      const msg = e?.shortMessage || e?.cause?.message || e?.message || "";
+      console.error("Refund failed:", msg);
+    }
+    setRefundingIds(prev => { const n = new Set(prev); n.delete(taskId); return n; });
+  };
+
   const settled = tasks.filter(t => t.status === "Settled");
   const escrowed = tasks.filter(t => t.status === "Open" || t.status === "Proving").reduce((a, t) => a + t.reward, 0n);
   const settledTotal = settled.reduce((a, t) => a + t.reward, 0n);
@@ -161,7 +196,8 @@ export default function ArcZK() {
               address={address}
               onPosted={handlePosted}
             />
-            <MyTasks tasks={tasks} address={address} />
+            <MyTasks tasks={tasks} address={address} onRefund={handleRefund} refundingIds={refundingIds} />
+            <MyClaims tasks={tasks} address={address} onSlash={handleSlash} slashingIds={slashingIds} />
             <TaskRegistry
               tasks={tasks}
               loading={loading}
