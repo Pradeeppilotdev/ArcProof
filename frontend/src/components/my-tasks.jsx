@@ -102,7 +102,7 @@ function TaskCard({ task, onRefund, refundingIds }) {
             {refundingIds?.has(task.id) ? "..." : "Refund"}
           </Button>
         ) : task.status === "Slashed" ? (
-          <span className="text-[10px] font-medium text-[#9a7b4f] bg-[#9a7b4f]/10 border border-[#9a7b4f]/30 rounded-full px-2.5 py-1">Refunded</span>
+          <span className="text-[10px] font-medium text-[#fbbf24] bg-[#fbbf24]/10 border border-[#fbbf24]/40 rounded-full px-2.5 py-1">Refunded</span>
         ) : (
           <Stepper task={task} />
         )}

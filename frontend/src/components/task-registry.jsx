@@ -7,7 +7,7 @@ const STATUS_STYLES = {
   Open: { dot: "bg-[#c084b5]", text: "text-[#c084b5]" },
   Proving: { dot: "bg-[#e8799a]", text: "text-[#e8799a]" },
   Settled: { dot: "bg-[#818cf8]", text: "text-[#818cf8]" },
-  Slashed: { dot: "bg-[#9a7b4f]", text: "text-[#9a7b4f]" },
+  Slashed: { dot: "bg-[#fbbf24]", text: "text-[#fbbf24]" },
 };
 
 function StatusBadge({ status }) {

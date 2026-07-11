@@ -51,7 +51,7 @@ export default function MyClaims({ tasks, address, onSlash, slashingIds }) {
                       <span className="text-[10px] font-medium text-[#818cf8] bg-[#818cf8]/10 border border-[#818cf8]/30 rounded-full px-2.5 py-1">Settled</span>
                     )}
                     {t.status === "Slashed" && (
-                      <span className="text-[10px] font-medium text-[#9a7b4f] bg-[#9a7b4f]/10 border border-[#9a7b4f]/30 rounded-full px-2.5 py-1">Slashed</span>
+                      <span className="text-[10px] font-medium text-[#fbbf24] bg-[#fbbf24]/10 border border-[#fbbf24]/40 rounded-full px-2.5 py-1">Slashed</span>
                     )}
                     {t.status === "Proving" && expired && (
                       <Button
