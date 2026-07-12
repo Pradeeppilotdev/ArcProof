@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { Button } from "./ui/button";
 import { formatUSDC, shorten } from "../lib/utils";
 
-export default function MyClaims({ tasks, address, onSlash, slashingIds }) {
-  const [err, setErr] = useState(null);
+export default function MyClaims({ tasks, address, onSlash, slashingIds, slashError }) {
 
   if (!address) return null;
   const claimed = tasks.filter(t => {
@@ -19,8 +17,8 @@ export default function MyClaims({ tasks, address, onSlash, slashingIds }) {
           <p className="text-[11px] text-muted-foreground mt-0.5">{claimed.length} claim{claimed.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
-      <div className={`transition-all duration-300 ${err ? 'opacity-100 max-h-10 mb-3' : 'opacity-0 max-h-0 mb-0 overflow-hidden'}`}>
-        <div className="text-xs text-destructive">{err || ""}</div>
+      <div className={`transition-all duration-300 ${slashError ? 'opacity-100 max-h-10 mb-3' : 'opacity-0 max-h-0 mb-0 overflow-hidden'}`}>
+        <div className="text-xs text-destructive">{slashError || ""}</div>
       </div>
       {claimed.length === 0 ? (
         <div className="rounded-lg border border-border bg-card p-6 sm:p-8 text-center">
@@ -56,7 +54,7 @@ export default function MyClaims({ tasks, address, onSlash, slashingIds }) {
                     {t.status === "Proving" && expired && (
                       <Button
                         disabled={slashingIds?.has(t.id)}
-                        onClick={() => { setErr(null); onSlash?.(t.id); }}
+                        onClick={() => onSlash?.(t.id)}
                         className="glass-card rounded-full text-[10px] px-3 py-1 min-w-[70px] justify-center disabled:opacity-50"
                       >
                         {slashingIds?.has(t.id) ? "..." : "Slash"}

@@ -23,6 +23,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
     if (!secret || !reward || !description || !writeContractAsync || !address) {
       if (!secret) { setShake("secret"); setTimeout(() => setShake(""), 500); }
       if (!description) { setShake("desc"); setTimeout(() => setShake(""), 500); }
+      if (!reward) { setShake("reward"); setTimeout(() => setShake(""), 500); }
       return;
     }
     setPosting(true);
@@ -73,6 +74,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
       });
 
       setSuccess({ taskId, txHash, reward: rewardFormatted });
+      setTimeout(() => setSuccess(null), 5000);
       setReward("10");
       setDescription("");
       setSecret("");
@@ -107,7 +109,7 @@ export default function PostTaskSection({ writeContractAsync, publicClient, addr
             <DollarIcon className="w-3 h-3" />
             USDC Reward
           </div>
-          <Input value={reward} onChange={(e) => setReward(e.target.value)} placeholder="10.00" className="font-mono" />
+          <Input value={reward} onChange={(e) => setReward(e.target.value)} placeholder="10.00" className={`font-mono ${shake === "reward" ? "shake" : ""}`} />
         </div>
         <div>
           <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1.5">

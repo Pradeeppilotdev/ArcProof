@@ -111,7 +111,7 @@ function TaskCard({ task, onRefund, refundingIds }) {
   );
 }
 
-export default function MyTasks({ tasks, address, onRefund, refundingIds }) {
+export default function MyTasks({ tasks, address, onRefund, refundingIds, refundError }) {
   if (!address) return null;
   const mine = tasks.filter(t => t.client?.toLowerCase() === address.toLowerCase());
 
@@ -122,6 +122,9 @@ export default function MyTasks({ tasks, address, onRefund, refundingIds }) {
           <h2 className="text-sm font-semibold text-primary">My Tasks</h2>
           <p className="text-[11px] text-muted-foreground mt-0.5">{mine.length} task{mine.length !== 1 ? "s" : ""} posted</p>
         </div>
+      </div>
+      <div className={`transition-all duration-300 ${refundError ? 'opacity-100 max-h-10 mb-3' : 'opacity-0 max-h-0 mb-0 overflow-hidden'}`}>
+        <div className="text-xs text-destructive">{refundError || ""}</div>
       </div>
       {mine.length === 0 ? (
         <div className="rounded-lg border border-border bg-card p-6 sm:p-8 text-center">

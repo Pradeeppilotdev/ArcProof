@@ -27,6 +27,8 @@ export default function ArcZK() {
   const [loading, setLoading] = useState(true);
   const [claimingIds, setClaimingIds] = useState(new Set());
   const [claimError, setClaimError] = useState(null);
+  const [slashError, setSlashError] = useState(null);
+  const [refundError, setRefundError] = useState(null);
   const [slashingIds, setSlashingIds] = useState(new Set());
   const [refundingIds, setRefundingIds] = useState(new Set());
 
@@ -138,9 +140,11 @@ export default function ArcZK() {
       });
       await publicClient.waitForTransactionReceipt({ hash });
       loadTasks();
+      setSlashError(null);
     } catch (e) {
       const msg = e?.shortMessage || e?.cause?.message || e?.message || "";
-      console.error("Slash failed:", msg);
+      setSlashError(msg.match(/denied|rejected|cancelled|cancel/i) ? "Request cancelled" : msg || "Slash failed");
+      setTimeout(() => setSlashError(null), 5000);
     }
     setSlashingIds(prev => { const n = new Set(prev); n.delete(taskId); return n; });
   };
@@ -154,9 +158,11 @@ export default function ArcZK() {
       });
       await publicClient.waitForTransactionReceipt({ hash });
       loadTasks();
+      setRefundError(null);
     } catch (e) {
       const msg = e?.shortMessage || e?.cause?.message || e?.message || "";
-      console.error("Refund failed:", msg);
+      setRefundError(msg.match(/denied|rejected|cancelled|cancel/i) ? "Request cancelled" : msg || "Refund failed");
+      setTimeout(() => setRefundError(null), 5000);
     }
     setRefundingIds(prev => { const n = new Set(prev); n.delete(taskId); return n; });
   };
@@ -196,8 +202,8 @@ export default function ArcZK() {
               address={address}
               onPosted={handlePosted}
             />
-            <MyTasks tasks={tasks} address={address} onRefund={handleRefund} refundingIds={refundingIds} />
-            <MyClaims tasks={tasks} address={address} onSlash={handleSlash} slashingIds={slashingIds} />
+            <MyTasks tasks={tasks} address={address} onRefund={handleRefund} refundingIds={refundingIds} refundError={refundError} />
+            <MyClaims tasks={tasks} address={address} onSlash={handleSlash} slashingIds={slashingIds} slashError={slashError} />
             <TaskRegistry
               tasks={tasks}
               loading={loading}
