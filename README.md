@@ -75,6 +75,16 @@ cp .env.example .env
 
 ---
 
+## Testing
+
+```bash
+npm test
+```
+
+29 Hardhat tests across `WorkRegistry`, `ProofVerifier`, and `SettlementGate` — access control (only `SettlementGate` can call `settleTask`, only the claiming agent can submit a proof), the deadline/slash/refund lifecycle, double-settlement protection, and proof-input validation (`InputMismatch`, `ScalarOutOfRange`, `InvalidProof`). `contracts/mocks/` holds a mintable USDC stand-in and a configurable fake Groth16 verifier so these run without generating real ZK proofs; `Groth16Verifier.sol` itself is exercised for real via the on-chain bytecode check noted above.
+
+---
+
 ## Build & Deploy
 
 ```bash
