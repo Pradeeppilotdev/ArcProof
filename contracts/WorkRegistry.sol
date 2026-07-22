@@ -51,10 +51,12 @@ contract WorkRegistry {
     error DeadlineNotPassed();
     error ZeroReward();
     error TransferFailed();
+    error ZeroAddress();
 
     // ─── Constructor ──────────────────────────────────────────────────────────
 
     constructor(address _usdc, address _settlementGate) {
+        if (_usdc == address(0) || _settlementGate == address(0)) revert ZeroAddress();
         usdc = IERC20(_usdc);
         settlementGate = _settlementGate;
     }
@@ -78,9 +80,6 @@ contract WorkRegistry {
         if (reward == 0) revert ZeroReward();
         if (deadline <= block.timestamp) revert DeadlinePassed();
 
-        bool ok = usdc.transferFrom(msg.sender, address(this), reward);
-        if (!ok) revert TransferFailed();
-
         taskId = nextTaskId++;
         tasks[taskId] = Task({
             client:      msg.sender,
@@ -92,6 +91,11 @@ contract WorkRegistry {
             salt:        _salt,
             description: _description
         });
+
+        // Effects before interaction: state is committed before the external call,
+        // so even a malicious/hook-bearing token can't reenter into an inconsistent state.
+        bool ok = usdc.transferFrom(msg.sender, address(this), reward);
+        if (!ok) revert TransferFailed();
 
         emit TaskPosted(taskId, msg.sender, reward, outputHash, deadline, _salt, _description);
     }

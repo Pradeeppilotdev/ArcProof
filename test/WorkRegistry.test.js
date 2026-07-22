@@ -10,6 +10,23 @@ describe("WorkRegistry", function () {
     ctx = await deployAll();
   });
 
+  describe("constructor", function () {
+    it("reverts if usdc is the zero address", async function () {
+      const factory = await ethers.getContractFactory("WorkRegistry");
+      await expect(factory.deploy(ethers.ZeroAddress, ctx.other.address)).to.be.revertedWithCustomError(
+        factory,
+        "ZeroAddress"
+      );
+    });
+
+    it("reverts if settlementGate is the zero address", async function () {
+      const factory = await ethers.getContractFactory("WorkRegistry");
+      await expect(
+        factory.deploy(await ctx.usdc.getAddress(), ethers.ZeroAddress)
+      ).to.be.revertedWithCustomError(factory, "ZeroAddress");
+    });
+  });
+
   describe("postTask", function () {
     it("escrows USDC and stores the task", async function () {
       const { workRegistry, usdc, client } = ctx;

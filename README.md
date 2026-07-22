@@ -46,12 +46,14 @@ submitProof() → SettlementGate → ProofVerifier → Groth16Verifier → settl
 
 | Contract | Address |
 |---|---|
-| Groth16Verifier | `0x8E7a48ab862D35098AC20E048A350311C739ac27` |
-| ProofVerifier | `0x6E17Dcb36a9225746C6E04acd6dCfA43Ac6f2F97` |
-| SettlementGate | `0x1E0583fF65171D29D6DB0b43Da4A09bb5CA0aF99` |
-| WorkRegistry | `0x3C4D771007a6f1a55e21303D996B9E02141A61e7` |
+| Groth16Verifier | `0xF8cEDF4A354c4797c0210720da7cA60Fa8cBf315` |
+| ProofVerifier | `0xF873FF8D85c889207FE96C7B795FD1cD49B4cA55` |
+| SettlementGate | `0xE268164C879594169F4DE08DDD778dECA7EdD22D` |
+| WorkRegistry | `0x68e1f8c12bEa096372B169a9e4f5fafb4BeD1c9A` |
 
-Verified 2026-07-22: on-chain `eth_getCode` for `Groth16Verifier` and `ProofVerifier` matches the compiled `artifacts/` bytecode exactly (the only byte-level diff on `ProofVerifier` is the immutable `groth16Verifier` constructor address, which correctly points at the deployed `Groth16Verifier` above). The real Groth16 verifier is live, not the mock.
+These are the addresses `frontend/src/lib/contracts.json` actually points at (source of truth for what's live at `arczk.vercel.app` — this table previously listed a stale, earlier deployment that the frontend didn't use).
+
+Verified 2026-07-22: on-chain `eth_getCode` for all four contracts matches the compiled `artifacts/` bytecode exactly (the only byte-level diffs are the immutable constructor addresses baked into `ProofVerifier` and `SettlementGate`, which correctly point at the contracts above, plus the trailing metadata hash). `SettlementGate` and `WorkRegistry` were redeployed on this date after a Slither pass (see Static analysis below) — `Groth16Verifier` and `ProofVerifier` are untouched and reused from the prior deployment.
 
 ---
 
@@ -81,7 +83,15 @@ cp .env.example .env
 npm test
 ```
 
-29 Hardhat tests across `WorkRegistry`, `ProofVerifier`, and `SettlementGate` — access control (only `SettlementGate` can call `settleTask`, only the claiming agent can submit a proof), the deadline/slash/refund lifecycle, double-settlement protection, and proof-input validation (`InputMismatch`, `ScalarOutOfRange`, `InvalidProof`). `contracts/mocks/` holds a mintable USDC stand-in and a configurable fake Groth16 verifier so these run without generating real ZK proofs; `Groth16Verifier.sol` itself is exercised for real via the on-chain bytecode check noted above.
+31 Hardhat tests across `WorkRegistry`, `ProofVerifier`, and `SettlementGate` — access control (only `SettlementGate` can call `settleTask`, only the claiming agent can submit a proof), the deadline/slash/refund lifecycle, double-settlement protection, constructor zero-address guards, and proof-input validation (`InputMismatch`, `ScalarOutOfRange`, `InvalidProof`). `contracts/mocks/` holds a mintable USDC stand-in and a configurable fake Groth16 verifier so these run without generating real ZK proofs; `Groth16Verifier.sol` itself is exercised for real via the on-chain bytecode check noted above.
+
+### Static analysis
+
+Ran [Slither](https://github.com/crytic/slither) (0.11.5) over `contracts/`. Findings acted on:
+- Added zero-address checks to `WorkRegistry`'s constructor (`usdc`, `settlementGate`) — an unguarded zero address there would have permanently bricked the contract.
+- Reordered `WorkRegistry.postTask` to write task state before the `transferFrom` call, so it follows checks-effects-interactions even if the escrowed token ever gained transfer hooks.
+
+Remaining findings are either informational (timestamp-comparison and naming-convention notes) or scoped to `Groth16Verifier.sol`, the unmodified snarkjs-generated verifier (inline assembly, non-mixedCase constants) — expected in generated pairing-check code and left as-is.
 
 ---
 
