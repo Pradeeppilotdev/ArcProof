@@ -3,6 +3,7 @@ import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { arcTestnet } from "./wagmi";
 
 const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || "YOUR_PROJECT_ID_FROM_REOWN_CLOUD";
+const rpcUrl = import.meta.env.VITE_ARC_RPC_URL || "https://rpc.testnet.arc.network";
 
 const metadata = {
   name: "ArcZK",
@@ -13,10 +14,15 @@ const metadata = {
 
 const networks = [arcTestnet];
 
+const customRpcUrls = {
+  "eip155:5042002": [{ url: rpcUrl }],
+};
+
 const wagmiAdapter = new WagmiAdapter({
   networks,
   projectId,
   ssr: false,
+  customRpcUrls,
 });
 
 createAppKit({
@@ -26,9 +32,7 @@ createAppKit({
   metadata,
   defaultNetwork: arcTestnet,
   features: { analytics: false },
-  customRpcUrls: {
-    "eip155:5042002": [{ url: "https://rpc.testnet.arc.network" }],
-  },
+  customRpcUrls,
 });
 
 export { wagmiAdapter };
