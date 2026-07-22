@@ -51,6 +51,8 @@ submitProof() → SettlementGate → ProofVerifier → Groth16Verifier → settl
 | SettlementGate | `0x1E0583fF65171D29D6DB0b43Da4A09bb5CA0aF99` |
 | WorkRegistry | `0x3C4D771007a6f1a55e21303D996B9E02141A61e7` |
 
+Verified 2026-07-22: on-chain `eth_getCode` for `Groth16Verifier` and `ProofVerifier` matches the compiled `artifacts/` bytecode exactly (the only byte-level diff on `ProofVerifier` is the immutable `groth16Verifier` constructor address, which correctly points at the deployed `Groth16Verifier` above). The real Groth16 verifier is live, not the mock.
+
 ---
 
 ## Setup
