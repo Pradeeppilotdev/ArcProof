@@ -11,6 +11,9 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground",
         destructive: "border-transparent bg-destructive text-destructive-foreground shadow",
         outline: "text-foreground",
+        settled: "rounded-full text-[10px] font-medium px-2.5 py-1 text-[#818cf8] bg-[#818cf8]/10 border-[#818cf8]/30",
+        proving: "rounded-full text-[10px] font-medium px-2.5 py-1 text-[#e8799a] bg-[#e8799a]/10 border-[#e8799a]/30",
+        slashed: "rounded-full text-[10px] font-medium px-2.5 py-1 text-[#fbbf24] bg-[#fbbf24]/10 border-[#fbbf24]/40",
       },
     },
     defaultVariants: {

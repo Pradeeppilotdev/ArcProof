@@ -1,4 +1,5 @@
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { ExternalLinkIcon } from "./icons";
 import { formatUSDC, shorten } from "../lib/utils";
 import { txUrl } from "../lib/explorer";
@@ -102,7 +103,7 @@ function TaskCard({ task, onRefund, refundingIds }) {
             {refundingIds?.has(task.id) ? "..." : "Refund"}
           </Button>
         ) : task.status === "Slashed" ? (
-          <span className="text-[10px] font-medium text-[#fbbf24] bg-[#fbbf24]/10 border border-[#fbbf24]/40 rounded-full px-2.5 py-1">Refunded</span>
+          <Badge variant="slashed">Refunded</Badge>
         ) : (
           <Stepper task={task} />
         )}

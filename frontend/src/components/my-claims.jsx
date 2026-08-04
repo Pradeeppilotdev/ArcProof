@@ -1,4 +1,5 @@
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { formatUSDC, shorten } from "../lib/utils";
 
 export default function MyClaims({ tasks, address, onSlash, slashingIds, slashError }) {
@@ -45,12 +46,8 @@ export default function MyClaims({ tasks, address, onSlash, slashingIds, slashEr
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {t.status === "Settled" && (
-                      <span className="text-[10px] font-medium text-[#818cf8] bg-[#818cf8]/10 border border-[#818cf8]/30 rounded-full px-2.5 py-1">Settled</span>
-                    )}
-                    {t.status === "Slashed" && (
-                      <span className="text-[10px] font-medium text-[#fbbf24] bg-[#fbbf24]/10 border border-[#fbbf24]/40 rounded-full px-2.5 py-1">Slashed</span>
-                    )}
+                    {t.status === "Settled" && <Badge variant="settled">Settled</Badge>}
+                    {t.status === "Slashed" && <Badge variant="slashed">Slashed</Badge>}
                     {t.status === "Proving" && expired && (
                       <Button
                         disabled={slashingIds?.has(t.id)}
@@ -60,9 +57,7 @@ export default function MyClaims({ tasks, address, onSlash, slashingIds, slashEr
                         {slashingIds?.has(t.id) ? "..." : "Slash"}
                       </Button>
                     )}
-                    {t.status === "Proving" && !expired && (
-                      <span className="text-[10px] font-medium text-[#e8799a] bg-[#e8799a]/10 border border-[#e8799a]/30 rounded-full px-2.5 py-1">Proving</span>
-                    )}
+                    {t.status === "Proving" && !expired && <Badge variant="proving">Proving</Badge>}
                   </div>
                 </div>
               </div>

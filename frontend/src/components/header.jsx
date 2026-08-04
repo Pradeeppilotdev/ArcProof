@@ -30,10 +30,16 @@ export default function Header() {
             </Button>
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className={`text-[11px] sm:text-xs cursor-pointer font-mono transition-colors inline-flex items-center gap-1 ${copied ? 'text-[#818cf8]' : onceCopied ? 'text-white/70 hover:text-white' : 'text-muted-foreground hover:text-white'}`} onClick={() => { navigator.clipboard.writeText(address); setCopied(true); setOnceCopied(true); setTimeout(() => setCopied(false), 1500); }} title={address}>
-                {copied ? "Copied!" : shorten(address)}
+              <button
+                type="button"
+                className={`text-[11px] sm:text-xs cursor-pointer font-mono transition-colors inline-flex items-center gap-1 ${copied ? 'text-[#818cf8]' : onceCopied ? 'text-white/70 hover:text-white' : 'text-muted-foreground hover:text-white'}`}
+                onClick={() => { navigator.clipboard.writeText(address); setCopied(true); setOnceCopied(true); setTimeout(() => setCopied(false), 1500); }}
+                title={address}
+                aria-label={`Copy wallet address ${address}`}
+              >
+                <span aria-live="polite">{copied ? "Copied!" : shorten(address)}</span>
                 {onceCopied && !copied && <svg className="w-2.5 h-2.5 text-white/30" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5 5.5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-              </span>
+              </button>
               <Button size="sm" onClick={disconnect} className="glass-card text-xs sm:text-sm">
                 Disconnect
               </Button>

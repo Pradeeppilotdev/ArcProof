@@ -150,16 +150,27 @@ export default function ProofModal({ task, onClose, onSettled, writeContractAsyn
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => !running && onClose()}>
-      <div className="backdrop-blur-[16px] rounded-2xl w-full max-w-[480px] max-h-[85vh] overflow-auto glass-edge border border-white/30" style={{ background: 'rgba(255,255,255,0.08)' }} onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+      onClick={() => !running && onClose()}
+      onKeyDown={(e) => e.key === "Escape" && !running && onClose()}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="proof-modal-title"
+        className="backdrop-blur-[16px] rounded-2xl w-full max-w-[480px] max-h-[85vh] overflow-auto glass-edge border border-white/30"
+        style={{ background: 'rgba(255,255,255,0.08)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6 pb-3">
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-sm font-semibold">Submit ZK Proof</div>
+              <div id="proof-modal-title" className="text-sm font-semibold">Submit ZK Proof</div>
               <div className="text-[11px] text-muted-foreground font-mono mt-1">Task #{task.id} &middot; {formatUSDC(task.reward)} USDC in escrow</div>
             </div>
             {!running && (
-              <button onClick={onClose} className="text-muted-foreground hover:text-foreground cursor-pointer">
+              <button onClick={onClose} aria-label="Close dialog" className="text-muted-foreground hover:text-foreground cursor-pointer">
                 <CloseIcon className="w-4 h-4" />
               </button>
             )}
