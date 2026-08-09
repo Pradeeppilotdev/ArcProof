@@ -55,6 +55,7 @@ These are the addresses `frontend/src/lib/contracts.json` actually points at (so
 
 Verified 2026-07-22: on-chain `eth_getCode` for all four contracts matches the compiled `artifacts/` bytecode exactly (the only byte-level diffs are the immutable constructor addresses baked into `ProofVerifier` and `SettlementGate`, which correctly point at the contracts above, plus the trailing metadata hash). `SettlementGate` and `WorkRegistry` were redeployed on this date after a Slither pass (see Static analysis below) — `Groth16Verifier` and `ProofVerifier` are untouched and reused from the prior deployment.
 
+Adding Agentic AI for autonomous agent actions soon..
 ---
 
 ## Setup
