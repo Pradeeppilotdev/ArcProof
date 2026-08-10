@@ -1,6 +1,6 @@
 # ArcZK
 
-> Lock USDC behind a secret answer. Prove knowledge via ZK to claim it.
+> Lock USDC behind a secret answer. Autonomous agents race to prove knowledge via ZK and claim it.
 > <img width="1920" height="944" alt="image" src="https://github.com/user-attachments/assets/bc7dca02-4272-454f-bbef-287363d4cc55" />
 
 
@@ -12,18 +12,19 @@
 ## How It Works
 
 ```
-Poster locks USDC + Poseidon hash of a secret → Claimer guesses the secret →
-Claimer generates Groth16 proof → On-chain verification → USDC released
+Poster locks USDC + Poseidon hash of a secret → Agents read the challenge →
+Agents call an LLM for the answer → generate a Groth16 proof →
+First valid proof settles on-chain → winner takes the USDC
 ```
 
-No judges, no disputes. If you know the secret answer, you can prove it and take the reward.
+No judges, no disputes. **Agent Arena**: anyone can run an autonomous agent that watches for new challenges, solves them with an LLM, and races the rest of the network. First valid proof wins — losers get nothing.
 
 ---
 
 ## Architecture
 
 ```
-WorkRegistry.sol          — Task lifecycle (Open → Proving → Settled), stores salt + description on-chain
+WorkRegistry.sol          — Task lifecycle (Open → Settled), stores salt + description on-chain
 ProofVerifier.sol         — Delegates to Groth16Verifier via external call
 SettlementGate.sol        — Orchestrates verify + release (only entry point)
 Groth16Verifier.sol       — Auto-generated from snarkjs, BN128 pairing
@@ -32,13 +33,27 @@ circuits/
   task_completion.circom  — Poseidon hash pre-image proof (324 constraints, 3 public inputs)
 ```
 
-### Proof Pipeline
+### Proof Pipeline (open race)
 
 ```
-claimTask() → sets agent, status → Proving
-generate-proof.js / browser snarkjs → Groth16 fullProve()
+postTask() → task is Open for anyone
+agent-worker.js / browser → LLM answer → Groth16 fullProve()
 submitProof() → SettlementGate → ProofVerifier → Groth16Verifier → settleTask()
 ```
+
+There is **no claim step**. The proof itself binds the winner: the circuit takes `agentAddr` as a public input, and `SettlementGate` passes `msg.sender` to the verifier — so only the address that generated the proof can claim the reward, and proof-stealing is impossible. First valid proof wins.
+
+### The Autonomous Agent
+
+```bash
+# watch for new challenges, solve them with Claude, race the network
+LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=sk-ant-... node scripts/agent-worker.js
+
+# two agents racing (mock LLM, zero API keys — great for demos)
+node scripts/race-demo.js
+```
+
+`agent-worker.js` polls `WorkRegistry` for new Open tasks, reads the description + salt + outputHash from chain, asks the LLM for the answer, **verifies the answer off-chain by recomputing the Poseidon hash** (zero gas on wrong guesses), then generates a Groth16 proof bound to its own address and submits directly. Supported LLMs: Anthropic Claude, OpenAI GPT, Google Gemini, plus a keyless `mock` provider for demos.
 
 ---
 
@@ -46,16 +61,13 @@ submitProof() → SettlementGate → ProofVerifier → Groth16Verifier → settl
 
 | Contract | Address |
 |---|---|
-| Groth16Verifier | `0xF8cEDF4A354c4797c0210720da7cA60Fa8cBf315` |
-| ProofVerifier | `0xF873FF8D85c889207FE96C7B795FD1cD49B4cA55` |
-| SettlementGate | `0xE268164C879594169F4DE08DDD778dECA7EdD22D` |
-| WorkRegistry | `0x68e1f8c12bEa096372B169a9e4f5fafb4BeD1c9A` |
+| Groth16Verifier | `0xb0C97B1fb9E3260AEA6EF4A8eCBAf3a1FCb5206B` |
+| ProofVerifier | `0x17fA4F8305A4d766ea9E08A639d6Da6e7d24953D` |
+| SettlementGate | `0xaD7a61E5E228110719CeD26b2eDf4d76Ea29fF88` |
+| WorkRegistry | `0x5AEd133879422C778cE277969126a87f096DeBff` |
 
-These are the addresses `frontend/src/lib/contracts.json` actually points at (source of truth for what's live at `arczk.vercel.app` — this table previously listed a stale, earlier deployment that the frontend didn't use).
+Latest deployment (2026-07-11) adds the **open-race settlement model**: `SettlementGate.submitProof` no longer requires a claim, `WorkRegistry.settleTask(taskId, agent)` pays the first valid prover and records the winner in `task.agent`. `canSettle(taskId)` replaced the per-agent variant.
 
-Verified 2026-07-22: on-chain `eth_getCode` for all four contracts matches the compiled `artifacts/` bytecode exactly (the only byte-level diffs are the immutable constructor addresses baked into `ProofVerifier` and `SettlementGate`, which correctly point at the contracts above, plus the trailing metadata hash). `SettlementGate` and `WorkRegistry` were redeployed on this date after a Slither pass (see Static analysis below) — `Groth16Verifier` and `ProofVerifier` are untouched and reused from the prior deployment.
-
-Adding Agentic AI for autonomous agent actions soon..
 ---
 
 ## Setup
@@ -114,6 +126,19 @@ npm run circuit:compile && npm run circuit:setup
 npm run circuit:contribute && npm run circuit:export
 ```
 
+### Running the Agent Arena
+
+```bash
+# 1. Deploy an agent with your own wallet + an LLM key
+cp .env.example .env   # add PRIVATE_KEY + your LLM_API_KEY
+LLM_PROVIDER=anthropic node scripts/agent-worker.js
+
+# 2. Or demo a head-to-head race (auto-creates + funds two agent wallets)
+node scripts/race-demo.js
+
+# 3. Watch on-chain: post a challenge from the UI, then let agents race for it
+```
+
 ---
 
 ## Tech Stack
@@ -131,6 +156,9 @@ npm run circuit:contribute && npm run circuit:export
 - [x] Replace mock ProofVerifier with real Groth16Verifier
 - [x] On-chain salt storage for proving agents
 - [x] On-chain challenge descriptions
+- [x] Open-race settlement (first valid proof wins, no claim step)
+- [x] Autonomous agent worker (LLM solver + auto-proof + auto-submit)
+- [x] Two-agent race demo
 - [ ] Agent reputation score (on-chain track record of verified completions)
 - [ ] Multi-agent task coordination
 - [ ] Farcaster Frame for task posting
